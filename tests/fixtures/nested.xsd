@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="order" type="OrderType"/>
+
+  <xs:complexType name="OrderType">
+    <xs:sequence>
+      <xs:element name="customer" type="CustomerType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="item" type="ItemType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="orderId" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="CustomerType">
+    <xs:sequence>
+      <xs:element name="firstName" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="lastName"  type="xs:string" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ItemType">
+    <xs:sequence>
+      <xs:element name="description" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="quantity"    type="xs:integer" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="price"       type="xs:decimal" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="sku" type="xs:string" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

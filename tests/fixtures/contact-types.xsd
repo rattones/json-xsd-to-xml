@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Type-library schema used to test xs:import.
+  Defines PhoneType and ContactInfoType in a separate namespace.
+-->
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://example.com/contact"
+  xmlns="http://example.com/contact"
+  elementFormDefault="qualified">
+
+  <xs:complexType name="PhoneType">
+    <xs:sequence>
+      <xs:element name="ddd"    type="xs:string" minOccurs="0"/>
+      <xs:element name="numero" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="tipo" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="ContactInfoType">
+    <xs:sequence>
+      <xs:element name="email"    type="xs:string" minOccurs="0"/>
+      <xs:element name="telefone" type="PhoneType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

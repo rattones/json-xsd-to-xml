@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tipo-library para testar xs:include.
+  Propositalmente sem xs:element raiz — exercita a correção do parseXsd
+  que permite includes de arquivos sem root element.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- EnderecoType: endereço completo de um prestador -->
+  <xs:complexType name="EnderecoType">
+    <xs:sequence>
+      <xs:element name="logradouro" type="xs:string"  minOccurs="1" maxOccurs="1"/>
+      <xs:element name="numero"     type="xs:string"  minOccurs="0" maxOccurs="1"/>
+      <xs:element name="cidade"     type="xs:string"  minOccurs="1" maxOccurs="1"/>
+      <xs:element name="UF"         type="xs:string"  minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ContatoType: dados de contato do prestador -->
+  <xs:complexType name="ContatoType">
+    <xs:sequence>
+      <xs:element name="telefone" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="email"    type="xs:string" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

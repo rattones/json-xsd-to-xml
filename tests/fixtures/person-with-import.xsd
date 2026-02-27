@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Root schema that imports contact-types.xsd and references its types via the ct: prefix.
+-->
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:ct="http://example.com/contact"
+  elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/contact" schemaLocation="contact-types.xsd"/>
+
+  <xs:element name="pessoa" type="PessoaType"/>
+
+  <xs:complexType name="PessoaType">
+    <xs:sequence>
+      <xs:element name="nome"    type="xs:string"/>
+      <xs:element name="idade"   type="xs:integer" minOccurs="0"/>
+      <xs:element name="contato" type="ct:ContactInfoType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

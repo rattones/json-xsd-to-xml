@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="envelope" type="EnvelopeType"/>
+
+  <!--
+    EnvelopeType has a known element (cabecalho) followed by xs:any,
+    which allows arbitrary child elements from any namespace.
+  -->
+  <xs:complexType name="EnvelopeType">
+    <xs:sequence>
+      <xs:element name="cabecalho" type="xs:string" minOccurs="1"/>
+      <xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="versao" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+</xs:schema>

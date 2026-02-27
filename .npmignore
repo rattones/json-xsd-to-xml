@@ -1,0 +1,18 @@
+# Source and tests — not required in the published package
+src/
+tests/
+
+# Config files
+tsconfig.json
+tsconfig.build.json
+tsup.config.ts
+vitest.config.ts
+biome.json
+
+# Development artifacts
+coverage/
+node_modules/
+*.log
+
+# CI/CD
+.github/

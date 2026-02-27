@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture XSD baseado no padrão TISS 4.03.00 – tissSolicitacaoStatusAutorizacao
+  Adaptado para testes do conversor json-xsd-to-xml (auto-contido, sem targetNamespace).
+
+  Exercita:
+    • xs:choice  — IdentificacaoPrestadorType (CNPJ | CPF | codigoPrestadorNaOperadora)
+    • xs:complexContent / xs:extension — OrigemType e DestinoType herdam LocalizacaoBaseType
+    • Tipos referenciados por nome (named complexTypes)
+    • Elementos opcionais (minOccurs="0") — campos anuláveis do JSON
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- ================================================================== -->
+  <!-- Elemento raiz                                                        -->
+  <!-- ================================================================== -->
+  <xs:element name="mensagemTISS" type="MensagemTISSType"/>
+
+  <!-- ================================================================== -->
+  <!-- MensagemTISSType                                                     -->
+  <!-- ================================================================== -->
+  <xs:complexType name="MensagemTISSType">
+    <xs:sequence>
+      <xs:element name="cabecalho"           type="CabecalhoType"           minOccurs="1" maxOccurs="1"/>
+      <xs:element name="situacaoAutorizacao"  type="SituacaoAutorizacaoType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="hash"                type="xs:string"               minOccurs="1" maxOccurs="1"/>
+      <xs:element name="Signature"           type="xs:string"               minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- CabecalhoType                                                        -->
+  <!-- ================================================================== -->
+  <xs:complexType name="CabecalhoType">
+    <xs:sequence>
+      <xs:element name="identificacaoTransacao" type="IdentificacaoTransacaoType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="falhaNegocio"           type="xs:string"                  minOccurs="0" maxOccurs="1"/>
+      <xs:element name="origem"                 type="OrigemType"                 minOccurs="1" maxOccurs="1"/>
+      <xs:element name="destino"                type="DestinoType"                minOccurs="1" maxOccurs="1"/>
+      <xs:element name="Padrao"                 type="xs:string"                  minOccurs="1" maxOccurs="1"/>
+      <xs:element name="loginSenhaPrestador"    type="LoginSenhaType"             minOccurs="0" maxOccurs="1"/>
+      <xs:element name="prestadorEstendido"     type="PrestadorEstendidoType"     minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- IdentificacaoTransacaoType                                           -->
+  <!-- ================================================================== -->
+  <xs:complexType name="IdentificacaoTransacaoType">
+    <xs:sequence>
+      <xs:element name="tipoTransacao"         type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="sequencialTransacao"   type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="dataRegistroTransacao" type="xs:date"   minOccurs="1" maxOccurs="1"/>
+      <xs:element name="horaRegistroTransacao" type="xs:time"   minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- IdentificacaoPrestadorType — xs:choice (CNPJ | CPF | codigo)        -->
+  <!-- ================================================================== -->
+  <xs:complexType name="IdentificacaoPrestadorType">
+    <xs:choice>
+      <xs:element name="CNPJ"                       type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="CPF"                        type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="codigoPrestadorNaOperadora"  type="xs:string" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- LocalizacaoBaseType — base compartilhada por Origem e Destino        -->
+  <!-- ================================================================== -->
+  <xs:complexType name="LocalizacaoBaseType">
+    <xs:sequence>
+      <xs:element name="identificacaoPrestador" type="IdentificacaoPrestadorType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="registroANS"            type="xs:string"                  minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- OrigemType herda LocalizacaoBaseType — exercita xs:complexContent/xs:extension -->
+  <xs:complexType name="OrigemType">
+    <xs:complexContent>
+      <xs:extension base="LocalizacaoBaseType"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- DestinoType herda LocalizacaoBaseType — mesma estrutura que Origem -->
+  <xs:complexType name="DestinoType">
+    <xs:complexContent>
+      <xs:extension base="LocalizacaoBaseType"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- LoginSenhaType                                                       -->
+  <!-- ================================================================== -->
+  <xs:complexType name="LoginSenhaType">
+    <xs:sequence>
+      <xs:element name="loginPrestador" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="senhaPrestador" type="xs:string" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- SituacaoAutorizacaoType                                              -->
+  <!-- ================================================================== -->
+  <xs:complexType name="SituacaoAutorizacaoType">
+    <xs:sequence>
+      <xs:element name="mensagemErro"             type="MensagemErroType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="autorizacaoInternacao"    type="xs:string"        minOccurs="0" maxOccurs="1"/>
+      <xs:element name="autorizacaoServico"       type="xs:string"        minOccurs="0" maxOccurs="1"/>
+      <xs:element name="autorizacaoProrrogacao"   type="xs:string"        minOccurs="0" maxOccurs="1"/>
+      <xs:element name="autorizacaoServicoOdonto" type="xs:string"        minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ================================================================== -->
+  <!-- MensagemErroType                                                     -->
+  <!-- ================================================================== -->
+  <xs:complexType name="MensagemErroType">
+    <xs:sequence>
+      <xs:element name="codigoGlosa"    type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="descricaoGlosa" type="xs:string" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- PrestadorEstendidoType: herda LocalizacaoBaseType e adiciona elementos próprios.
+       Exercita xs:complexContent/xs:extension com elementos definidos na extensão. -->
+  <xs:complexType name="PrestadorEstendidoType">
+    <xs:complexContent>
+      <xs:extension base="LocalizacaoBaseType">
+        <xs:sequence>
+          <xs:element name="nomeFantasia"  type="xs:string" minOccurs="0" maxOccurs="1"/>
+          <xs:element name="especialidade" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+</xs:schema>

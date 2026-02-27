@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture que testa xs:include: inclui tiss-tipos.xsd e referencia
+  os complexTypes EnderecoType e ContatoType definidos nele.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:include schemaLocation="tiss-tipos.xsd"/>
+
+  <xs:element name="prestadorCompleto" type="PrestadorCompletoType"/>
+
+  <xs:complexType name="PrestadorCompletoType">
+    <xs:sequence>
+      <xs:element name="nome"     type="xs:string"   minOccurs="1" maxOccurs="1"/>
+      <xs:element name="endereco" type="EnderecoType" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="contato"  type="ContatoType"  minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
