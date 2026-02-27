@@ -3,7 +3,7 @@
 > Convert a JSON object to an XML string guided by an XSD schema.
 
 [![npm](https://img.shields.io/npm/v/json-xsd-to-xml)](https://www.npmjs.com/package/json-xsd-to-xml)
-[![license](https://img.shields.io/npm/l/json-xsd-to-xml)](./MIT)
+[![license](https://img.shields.io/npm/l/json-xsd-to-xml)](https://opensource.org/license/mit)
 [![node](https://img.shields.io/node/v/json-xsd-to-xml)](https://nodejs.org)
 
 ## Features
