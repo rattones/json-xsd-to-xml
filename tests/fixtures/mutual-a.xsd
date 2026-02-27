@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mimics tissWebServicesV4_03_00.xsd / tissV4_03_00.xsd pattern:
+  - Includes mutual-b.xsd (which in turn includes this file → cycle)
+  - Imports mutual-dsig.xsd (default-namespace XSD with <any> elements)
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:dsig="urn:test:mutual-dsig"
+           targetNamespace="urn:test:mutual-a">
+
+  <xs:include schemaLocation="mutual-b.xsd"/>
+  <xs:import  namespace="urn:test:mutual-dsig" schemaLocation="mutual-dsig.xsd"/>
+
+  <xs:element name="rootA" type="TypeWithSig"/>
+
+  <xs:complexType name="TypeWithSig">
+    <xs:sequence>
+      <xs:element name="name"      type="xs:string"/>
+      <xs:element name="signature" type="dsig:SignatureType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

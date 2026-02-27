@@ -17,17 +17,68 @@ import type {
 
 type RawNode = Record<string, unknown>;
 
-const ALWAYS_ARRAY = [
-  'xs:element',
-  'xs:attribute',
-  'xs:complexType',
-  'xs:simpleType',
-  'xs:sequence',
-  'xs:all',
-  'xs:choice',
-  'xs:include',
-  'xs:import',
+// Local names that must always be parsed as arrays (with and without xs: prefix,
+// to handle both prefixed XSDs and default-namespace XSDs like xmldsig-core-schema.xsd).
+const XSD_ARRAY_LOCAL_NAMES = [
+  'element',
+  'attribute',
+  'complexType',
+  'simpleType',
+  'sequence',
+  'all',
+  'choice',
+  'include',
+  'import',
 ];
+
+const ALWAYS_ARRAY = [...XSD_ARRAY_LOCAL_NAMES.map((n) => `xs:${n}`), ...XSD_ARRAY_LOCAL_NAMES];
+
+// ---------------------------------------------------------------------------
+// Default-namespace normalisation (xs: prefix inferral)
+// ---------------------------------------------------------------------------
+
+/**
+ * XSD element/attribute names that appear WITHOUT a prefix when the schema
+ * declares xmlns="http://www.w3.org/2001/XMLSchema" as the default namespace.
+ * We remap them to the xs:-prefixed equivalents so the rest of the parser can
+ * work uniformly.
+ */
+const XSD_BARE_TO_PREFIXED: Record<string, string> = {
+  schema: 'xs:schema',
+  element: 'xs:element',
+  attribute: 'xs:attribute',
+  complexType: 'xs:complexType',
+  simpleType: 'xs:simpleType',
+  sequence: 'xs:sequence',
+  all: 'xs:all',
+  choice: 'xs:choice',
+  include: 'xs:include',
+  import: 'xs:import',
+  complexContent: 'xs:complexContent',
+  simpleContent: 'xs:simpleContent',
+  extension: 'xs:extension',
+  restriction: 'xs:restriction',
+  any: 'xs:any',
+  annotation: 'xs:annotation',
+  documentation: 'xs:documentation',
+  union: 'xs:union',
+  list: 'xs:list',
+};
+
+function normalizeXsPrefix(node: unknown): unknown {
+  if (Array.isArray(node)) {
+    return node.map(normalizeXsPrefix);
+  }
+  if (node !== null && typeof node === 'object') {
+    const result: RawNode = {};
+    for (const [key, value] of Object.entries(node as RawNode)) {
+      const normalizedKey = XSD_BARE_TO_PREFIXED[key] ?? key;
+      result[normalizedKey] = normalizeXsPrefix(value);
+    }
+    return result;
+  }
+  return node;
+}
 
 function makeParser(): XMLParser {
   return new XMLParser({
@@ -76,13 +127,26 @@ function parseAttribute(raw: RawNode): AttributeDef {
 // ComplexType parsing
 // ---------------------------------------------------------------------------
 
+/**
+ * Safely coerces a raw compositor node (the first item of an ALWAYS_ARRAY
+ * field) to a RawNode.  fast-xml-parser can return a primitive (e.g. `""`)
+ * for empty compositors like `<xs:sequence/>`, so we must not rely on `?? {}`
+ * because `"" ?? {}` stays as `""`, causing `'xs:any' in ""` to throw a
+ * TypeError at runtime.
+ */
+function asObject(value: unknown): RawNode {
+  return value !== null && value !== undefined && typeof value === 'object'
+    ? (value as RawNode)
+    : {};
+}
+
 function extractCompositorElements(raw: RawNode): {
   compositor: Compositor;
   elements: RawNode[];
   hasWildcard: boolean;
 } {
   if (raw['xs:sequence']) {
-    const seq = (raw['xs:sequence'] as RawNode[])[0] ?? {};
+    const seq = asObject((raw['xs:sequence'] as unknown[])[0]);
     return {
       compositor: 'sequence',
       elements: (seq['xs:element'] as RawNode[] | undefined) ?? [],
@@ -90,7 +154,7 @@ function extractCompositorElements(raw: RawNode): {
     };
   }
   if (raw['xs:all']) {
-    const all = (raw['xs:all'] as RawNode[])[0] ?? {};
+    const all = asObject((raw['xs:all'] as unknown[])[0]);
     return {
       compositor: 'all',
       elements: (all['xs:element'] as RawNode[] | undefined) ?? [],
@@ -98,7 +162,7 @@ function extractCompositorElements(raw: RawNode): {
     };
   }
   if (raw['xs:choice']) {
-    const choice = (raw['xs:choice'] as RawNode[])[0] ?? {};
+    const choice = asObject((raw['xs:choice'] as unknown[])[0]);
     return {
       compositor: 'choice',
       elements: (choice['xs:element'] as RawNode[] | undefined) ?? [],
@@ -202,13 +266,28 @@ function parseElement(raw: RawNode): ElementDef {
 // ---------------------------------------------------------------------------
 
 /**
- * Reads an XSD file from disk and parses it into a SchemaModel.
- *
- * @param xsdPath - Absolute or relative path to the .xsd file.
- * @param baseDir - Optional base directory for resolving relative paths.
+ * Internal recursive implementation. Accepts a `visited` set of already-resolved
+ * absolute paths so circular xs:include / xs:import chains do not cause infinite
+ * recursion.  When a cycle is detected the function returns an empty model and
+ * lets the caller continue with whatever types it has collected so far.
  */
-export async function parseXsd(xsdPath: string, baseDir?: string): Promise<SchemaModel> {
+async function parseXsdInternal(
+  xsdPath: string,
+  baseDir: string | undefined,
+  visited: Set<string>,
+): Promise<SchemaModel> {
   const resolvedPath = baseDir ? resolve(baseDir, xsdPath) : resolve(xsdPath);
+
+  if (visited.has(resolvedPath)) {
+    // Already processing this file up the call stack — break the cycle.
+    return {
+      rootElement: '',
+      elements: new Map(),
+      complexTypes: new Map(),
+      simpleTypes: new Map(),
+    };
+  }
+  visited.add(resolvedPath);
 
   let xsdContent: string;
   try {
@@ -220,7 +299,15 @@ export async function parseXsd(xsdPath: string, baseDir?: string): Promise<Schem
   let parsed: RawNode;
   try {
     const parser = makeParser();
-    parsed = parser.parse(xsdContent) as RawNode;
+    const rawParsed = parser.parse(xsdContent) as RawNode;
+    // If the XSD uses a default namespace (e.g. xmlns="...XMLSchema") instead
+    // of the xs: prefix, fast-xml-parser produces keys like 'schema',
+    // 'element', 'sequence', etc.  Normalise them to xs:* so the rest of the
+    // parser works uniformly.
+    parsed =
+      rawParsed.schema !== undefined && rawParsed['xs:schema'] === undefined
+        ? (normalizeXsPrefix(rawParsed) as RawNode)
+        : rawParsed;
   } catch (err) {
     throw new XsdParseError(`Failed to parse XSD XML content from: ${resolvedPath}`, err);
   }
@@ -282,7 +369,7 @@ export async function parseXsd(xsdPath: string, baseDir?: string): Promise<Schem
     const schemaLocation = attr(rawInclude, 'schemaLocation');
     if (!schemaLocation) continue;
     try {
-      const includedModel = await parseXsd(schemaLocation, schemaBaseDir);
+      const includedModel = await parseXsdInternal(schemaLocation, schemaBaseDir, visited);
       for (const [k, v] of includedModel.elements) {
         if (!elements.has(k)) elements.set(k, v);
       }
@@ -305,7 +392,7 @@ export async function parseXsd(xsdPath: string, baseDir?: string): Promise<Schem
     const schemaLocation = attr(rawImport, 'schemaLocation');
     if (!schemaLocation) continue;
     try {
-      const importedModel = await parseXsd(schemaLocation, schemaBaseDir);
+      const importedModel = await parseXsdInternal(schemaLocation, schemaBaseDir, visited);
       // Collect all prefixes that map to the imported namespace
       const prefixes: string[] = [];
       for (const [pfx, uri] of prefixMap) {
@@ -334,4 +421,14 @@ export async function parseXsd(xsdPath: string, baseDir?: string): Promise<Schem
   }
 
   return { rootElement, elements, complexTypes, simpleTypes, targetNamespace };
+}
+
+/**
+ * Reads an XSD file from disk and parses it into a SchemaModel.
+ *
+ * @param xsdPath - Absolute or relative path to the .xsd file.
+ * @param baseDir - Optional base directory for resolving relative paths.
+ */
+export async function parseXsd(xsdPath: string, baseDir?: string): Promise<SchemaModel> {
+  return parseXsdInternal(xsdPath, baseDir, new Set<string>());
 }

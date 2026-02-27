@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mimics tissComplexTypesV4_03_00.xsd / tissGuiasV4_03_00.xsd pattern:
+  mutual-b.xsd includes mutual-a.xsd, completing the A→B→A cycle.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:include schemaLocation="mutual-a.xsd"/>
+
+  <xs:complexType name="TypeB">
+    <xs:sequence>
+      <xs:element name="code"  type="xs:string"/>
+      <xs:element name="value" type="xs:integer" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

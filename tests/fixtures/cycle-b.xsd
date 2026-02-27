@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Second half of the circular-include test.
+  cycle-b.xsd includes cycle-a.xsd, completing the cycle.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:include schemaLocation="cycle-a.xsd"/>
+
+  <xs:complexType name="TypeB">
+    <xs:sequence>
+      <xs:element name="value" type="xs:integer"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

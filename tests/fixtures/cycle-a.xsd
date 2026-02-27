@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture for circular-include test.
+  cycle-a.xsd includes cycle-b.xsd, which in turn includes cycle-a.xsd.
+  The parser must not enter infinite recursion.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:include schemaLocation="cycle-b.xsd"/>
+
+  <xs:element name="rootA" type="TypeA"/>
+
+  <xs:complexType name="TypeA">
+    <xs:sequence>
+      <xs:element name="label" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

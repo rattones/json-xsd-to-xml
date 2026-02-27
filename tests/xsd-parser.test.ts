@@ -262,6 +262,14 @@ describe('parseXsd — xs:include', () => {
     const enderecoCount = [...model.complexTypes.keys()].filter((k) => k === 'EnderecoType').length;
     expect(enderecoCount).toBe(1);
   });
+
+  it('does not loop infinitely on circular xs:include (cycle-a ↔ cycle-b)', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'cycle-a.xsd'));
+    // Both types must be collected despite the cycle
+    expect(model.complexTypes.has('TypeA')).toBe(true);
+    expect(model.complexTypes.has('TypeB')).toBe(true);
+    expect(model.rootElement).toBe('rootA');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -324,4 +332,157 @@ describe('parseXsd — xs:import', () => {
     expect(model.complexTypes.has('PhoneType')).toBe(true);
     expect(model.complexTypes.has('ct:PhoneType')).toBe(true);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Default-namespace XSD (xmlns="...XMLSchema", no xs: prefix) — default-ns.xsd
+// ---------------------------------------------------------------------------
+
+describe('parseXsd — default-namespace XSD (no xs: prefix)', () => {
+  it('resolves rootElement from a default-namespace XSD', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    expect(model.rootElement).toBe('payload');
+  });
+
+  it('registers the complexType from a default-namespace XSD', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    expect(model.complexTypes.has('PayloadType')).toBe(true);
+  });
+
+  it('captures sequence elements inside a default-namespace XSD', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    const ct = model.complexTypes.get('PayloadType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    expect(ct.elements.map((e) => e.name)).toContain('id');
+    expect(ct.elements.map((e) => e.name)).toContain('value');
+  });
+
+  it('marks hasWildcard=true when <any> is present in a default-namespace XSD', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    const ct = model.complexTypes.get('PayloadType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    expect(ct.hasWildcard).toBe(true);
+  });
+
+  it('registers simpleType from a default-namespace XSD', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    expect(model.simpleTypes.has('StatusCode')).toBe(true);
+  });
+
+  it('captures attribute from a default-namespace XSD complexType', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'default-ns.xsd'));
+    const ct = model.complexTypes.get('PayloadType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    const versionAttr = ct.attributes.find((a) => a.name === 'version');
+    expect(versionAttr).toBeDefined();
+    expect(versionAttr?.use).toBe('optional');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Empty compositor — must NOT throw "Cannot use 'in' operator to search for …"
+// ---------------------------------------------------------------------------
+
+describe('parseXsd — empty compositor does not crash', () => {
+  it('parses an XSD whose sequence has no children without throwing', async () => {
+    // any-envelope.xsd has a well-formed sequence; we test via programmatic
+    // inline XSD to exercise an empty xs:sequence path.
+    const { XMLParser } = await import('fast-xml-parser');
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      isArray: (name) =>
+        [
+          'xs:element',
+          'xs:attribute',
+          'xs:complexType',
+          'xs:simpleType',
+          'xs:sequence',
+          'xs:all',
+          'xs:choice',
+          'xs:include',
+          'xs:import',
+        ].includes(name),
+    });
+    // Empty xs:sequence (fast-xml-parser yields "" for the first array entry)
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="empty" type="EmptyType"/>
+  <xs:complexType name="EmptyType">
+    <xs:sequence/>
+  </xs:complexType>
+</xs:schema>`;
+    const raw = parser.parse(xml) as Record<string, unknown>;
+    const schema = raw['xs:schema'] as Record<string, unknown>;
+    const seqArr = schema['xs:complexType'] as Record<string, unknown>[];
+    const seqNode = seqArr[0]['xs:sequence'] as unknown[];
+    // Verify fast-xml-parser actually produces "" for an empty element
+    expect(typeof seqNode[0]).toBe('string');
+
+    // Now verify parseXsd itself does not throw on this fixture
+    const { writeFile, unlink } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const tmpPath = join(tmpdir(), 'empty-sequence-fixture.xsd');
+    await writeFile(tmpPath, xml, 'utf-8');
+    await expect(parseXsd(tmpPath)).resolves.toBeDefined();
+    await unlink(tmpPath);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Circular xs:include + default-namespace xs:import with xs:any
+// Reproduces the TISS pattern:
+//   mutual-a.xsd  →  xs:include mutual-b.xsd
+//                    xs:import  mutual-dsig.xsd  (default NS, has <any>)
+//   mutual-b.xsd  →  xs:include mutual-a.xsd    ← cycle
+//   mutual-dsig.xsd uses xmlns="...XMLSchema" and <any namespace="##any"/>
+// ---------------------------------------------------------------------------
+
+describe('parseXsd — circular include + default-NS import with xs:any (TISS pattern)', () => {
+  // 5 s hard cap: if cycle-detection is broken the test would hang indefinitely
+  const TIMEOUT = 5_000;
+
+  it('completes without hanging (no infinite loop)', async () => {
+    await expect(parseXsd(resolve(fixturesDir, 'mutual-a.xsd'))).resolves.toBeDefined();
+  }, TIMEOUT);
+
+  it('registers TypeWithSig from mutual-a.xsd', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    expect(model.complexTypes.has('TypeWithSig')).toBe(true);
+  }, TIMEOUT);
+
+  it('registers TypeB from cyclic mutual-b.xsd', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    expect(model.complexTypes.has('TypeB')).toBe(true);
+  }, TIMEOUT);
+
+  it('registers SignatureType from default-namespace import (mutual-dsig.xsd)', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    expect(model.complexTypes.has('SignatureType')).toBe(true);
+  }, TIMEOUT);
+
+  it('registers SignatureType under the dsig: prefix', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    expect(model.complexTypes.has('dsig:SignatureType')).toBe(true);
+  }, TIMEOUT);
+
+  it('marks SignatureType hasWildcard=true (contains xs:any from default-NS schema)', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    const ct = model.complexTypes.get('SignatureType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    expect(ct.hasWildcard).toBe(true);
+  }, TIMEOUT);
+
+  it('marks SignedInfoType hasWildcard=true', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+    const ct = model.complexTypes.get('SignedInfoType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    expect(ct.hasWildcard).toBe(true);
+  }, TIMEOUT);
 });

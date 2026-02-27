@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mimics xmldsig-core-schema.xsd:
+  - Uses xmlns="...XMLSchema" as the DEFAULT namespace (no xs: prefix)
+  - Contains <any> elements (becomes xs:any after normalisation)
+  - Declares a targetNamespace so it can be imported with a prefix
+-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="urn:test:mutual-dsig">
+
+  <complexType name="SignatureType">
+    <sequence>
+      <any namespace="##any" minOccurs="0" maxOccurs="unbounded"/>
+    </sequence>
+    <attribute name="Id" type="ID" use="optional"/>
+  </complexType>
+
+  <complexType name="SignedInfoType">
+    <sequence>
+      <any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </sequence>
+  </complexType>
+
+</schema>
