@@ -1,8 +1,8 @@
-import { parseXsd } from './xsd/parser.js';
-import { SchemaWalker } from './xsd/walker.js';
+import type { JsonObject } from './types.js';
 import { validateJson } from './validation/json-validator.js';
 import { buildXml } from './xml/builder.js';
-import type { JsonObject } from './types.js';
+import { parseXsd } from './xsd/parser.js';
+import { SchemaWalker } from './xsd/walker.js';
 
 // Re-export for external typing convenience
 export type { SchemaModel } from './xsd/types.js';

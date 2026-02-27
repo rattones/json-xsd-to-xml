@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { convertJsonToXml } from '../src/converter.js';
 import { XsdMappingError, XsdValidationError } from '../src/validation/errors.js';
@@ -19,11 +19,9 @@ const tissTipos = resolve(fixturesDir, 'tiss-tipos.xsd');
 
 describe('converter — simple.xsd', () => {
   it('converts a minimal valid person JSON to XML', async () => {
-    const xml = await convertJsonToXml(
-      { '@id': '42', name: 'Alice', age: 30 },
-      simple,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ '@id': '42', name: 'Alice', age: 30 }, simple, {
+      xmlDeclaration: false,
+    });
     expect(xml).toContain('<person');
     expect(xml).toContain('id="42"');
     expect(xml).toContain('<name>Alice</name>');
@@ -31,11 +29,9 @@ describe('converter — simple.xsd', () => {
   });
 
   it('wraps the object in the root element name when provided', async () => {
-    const xml = await convertJsonToXml(
-      { person: { '@id': '1', name: 'Bob', age: 25 } },
-      simple,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ person: { '@id': '1', name: 'Bob', age: 25 } }, simple, {
+      xmlDeclaration: false,
+    });
     expect(xml).toContain('<person');
     expect(xml).toContain('id="1"');
     expect(xml).toContain('<name>Bob</name>');
@@ -51,20 +47,17 @@ describe('converter — simple.xsd', () => {
   });
 
   it('omits optional email when absent', async () => {
-    const xml = await convertJsonToXml(
-      { '@id': '8', name: 'Dan', age: 40 },
-      simple,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ '@id': '8', name: 'Dan', age: 40 }, simple, {
+      xmlDeclaration: false,
+    });
     expect(xml).not.toContain('<email>');
   });
 
   it('pretty-prints the XML when prettyPrint: true', async () => {
-    const xml = await convertJsonToXml(
-      { '@id': '1', name: 'Eve', age: 28 },
-      simple,
-      { prettyPrint: true, xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ '@id': '1', name: 'Eve', age: 28 }, simple, {
+      prettyPrint: true,
+      xmlDeclaration: false,
+    });
     expect(xml).toMatch(/\n/);
     expect(xml).toMatch(/^\s{2}/m);
   });
@@ -192,16 +185,16 @@ describe('converter — strict validation', () => {
       error = e as XsdValidationError;
     }
     expect(error).toBeInstanceOf(XsdValidationError);
-    expect(error!.issues.length).toBeGreaterThanOrEqual(2);
+    if (!error) return;
+    expect(error.issues.length).toBeGreaterThanOrEqual(2);
   });
 
   it('passes validation when all required fields are present', async () => {
     await expect(
-      convertJsonToXml(
-        { '@id': '1', name: 'Valid', age: 10 },
-        simple,
-        { strict: true, xmlDeclaration: false },
-      ),
+      convertJsonToXml({ '@id': '1', name: 'Valid', age: 10 }, simple, {
+        strict: true,
+        xmlDeclaration: false,
+      }),
     ).resolves.toContain('<name>Valid</name>');
   });
 });
@@ -227,7 +220,8 @@ describe('converter — XsdMappingError (erros estruturais)', () => {
       err = e as XsdMappingError;
     }
     expect(err).toBeInstanceOf(XsdMappingError);
-    expect(err!.message).toContain('not found in schema');
+    if (!err) return;
+    expect(err.message).toContain('not found in schema');
   });
 
   it('a propriedade path da XsdMappingError aponta para a raiz ($)', async () => {
@@ -238,7 +232,8 @@ describe('converter — XsdMappingError (erros estruturais)', () => {
       err = e as XsdMappingError;
     }
     expect(err).toBeInstanceOf(XsdMappingError);
-    expect(err!.path).toBe('$');
+    if (!err) return;
+    expect(err.path).toBe('$');
   });
 
   it('lança XsdMappingError quando o valor do elemento raiz é um array (estrutura inválida)', async () => {
@@ -247,11 +242,7 @@ describe('converter — XsdMappingError (erros estruturais)', () => {
     // e buildElement recebe um array diretamente, lançando XsdMappingError.
     const anyEnvelope = resolve(fixturesDir, 'any-envelope.xsd');
     await expect(
-      convertJsonToXml(
-        { envelope: ['a', 'b'] } as never,
-        anyEnvelope,
-        { xmlDeclaration: false },
-      ),
+      convertJsonToXml({ envelope: ['a', 'b'] } as never, anyEnvelope, { xmlDeclaration: false }),
     ).rejects.toThrow(XsdMappingError);
   });
 });
@@ -262,11 +253,10 @@ describe('converter — XsdMappingError (erros estruturais)', () => {
 
 describe('converter — custom options', () => {
   it('respects custom attributePrefix', async () => {
-    const xml = await convertJsonToXml(
-      { '!id': '99', name: 'Custom', age: 5 },
-      simple,
-      { xmlDeclaration: false, attributePrefix: '!' },
-    );
+    const xml = await convertJsonToXml({ '!id': '99', name: 'Custom', age: 5 }, simple, {
+      xmlDeclaration: false,
+      attributePrefix: '!',
+    });
     expect(xml).toContain('id="99"');
   });
 });
@@ -420,7 +410,11 @@ describe('xs:choice — cada ramo do identificacaoPrestador', () => {
       cabecalho: {
         ...choiceBase.cabecalho,
         origem: {
-          identificacaoPrestador: { CNPJ: '12345678000195', CPF: null, codigoPrestadorNaOperadora: null },
+          identificacaoPrestador: {
+            CNPJ: '12345678000195',
+            CPF: null,
+            codigoPrestadorNaOperadora: null,
+          },
           registroANS: null,
         },
       },
@@ -437,7 +431,11 @@ describe('xs:choice — cada ramo do identificacaoPrestador', () => {
       cabecalho: {
         ...choiceBase.cabecalho,
         origem: {
-          identificacaoPrestador: { CNPJ: null, CPF: '12345678909', codigoPrestadorNaOperadora: null },
+          identificacaoPrestador: {
+            CNPJ: null,
+            CPF: '12345678909',
+            codigoPrestadorNaOperadora: null,
+          },
           registroANS: null,
         },
       },
@@ -586,7 +584,11 @@ describe('xs:complexContent/xs:extension — herança com elementos próprios', 
       cabecalho: {
         ...extensionBase.cabecalho,
         prestadorEstendido: {
-          identificacaoPrestador: { CNPJ: '98765432000100', CPF: null, codigoPrestadorNaOperadora: null },
+          identificacaoPrestador: {
+            CNPJ: '98765432000100',
+            CPF: null,
+            codigoPrestadorNaOperadora: null,
+          },
           registroANS: '001234',
           nomeFantasia: 'Hospital Central',
           especialidade: 'Ortopedia',
@@ -722,20 +724,14 @@ const anyEnvelope = resolve(fixturesDir, 'any-envelope.xsd');
 
 describe('converter — xs:any (any-envelope.xsd)', () => {
   it('renders the known cabecalho field normally', async () => {
-    const xml = await convertJsonToXml(
-      { cabecalho: 'v1' },
-      anyEnvelope,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ cabecalho: 'v1' }, anyEnvelope, { xmlDeclaration: false });
     expect(xml).toContain('<cabecalho>v1</cabecalho>');
   });
 
   it('passes through an unknown scalar element via xs:any', async () => {
-    const xml = await convertJsonToXml(
-      { cabecalho: 'v1', payload: 'dado livre' },
-      anyEnvelope,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ cabecalho: 'v1', payload: 'dado livre' }, anyEnvelope, {
+      xmlDeclaration: false,
+    });
     expect(xml).toContain('<payload>dado livre</payload>');
   });
 
@@ -751,22 +747,18 @@ describe('converter — xs:any (any-envelope.xsd)', () => {
   });
 
   it('passes through multiple occurrences of an unknown element (array)', async () => {
-    const xml = await convertJsonToXml(
-      { cabecalho: 'v1', item: ['x', 'y', 'z'] },
-      anyEnvelope,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ cabecalho: 'v1', item: ['x', 'y', 'z'] }, anyEnvelope, {
+      xmlDeclaration: false,
+    });
     expect(xml).toContain('<item>x</item>');
     expect(xml).toContain('<item>y</item>');
     expect(xml).toContain('<item>z</item>');
   });
 
   it('skips null wildcard values', async () => {
-    const xml = await convertJsonToXml(
-      { cabecalho: 'v1', vazio: null },
-      anyEnvelope,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ cabecalho: 'v1', vazio: null }, anyEnvelope, {
+      xmlDeclaration: false,
+    });
     expect(xml).not.toContain('vazio');
   });
 
@@ -782,11 +774,10 @@ describe('converter — xs:any (any-envelope.xsd)', () => {
 
   it('strict mode does NOT report unknown keys as errors when xs:any is present', async () => {
     await expect(
-      convertJsonToXml(
-        { cabecalho: 'v1', qualquerCoisa: 'ok' },
-        anyEnvelope,
-        { xmlDeclaration: false, strict: true },
-      ),
+      convertJsonToXml({ cabecalho: 'v1', qualquerCoisa: 'ok' }, anyEnvelope, {
+        xmlDeclaration: false,
+        strict: true,
+      }),
     ).resolves.not.toThrow();
   });
 });
@@ -814,21 +805,17 @@ describe('converter — xs:import (person-with-import.xsd)', () => {
   });
 
   it('renders the root pessoa element', async () => {
-    const xml = await convertJsonToXml(
-      { nome: 'João' },
-      personWithImport,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ nome: 'João' }, personWithImport, {
+      xmlDeclaration: false,
+    });
     expect(xml).toContain('<pessoa>');
     expect(xml).toContain('</pessoa>');
   });
 
   it('omits optional contato when absent', async () => {
-    const xml = await convertJsonToXml(
-      { nome: 'Carlos', idade: '30' },
-      personWithImport,
-      { xmlDeclaration: false },
-    );
+    const xml = await convertJsonToXml({ nome: 'Carlos', idade: '30' }, personWithImport, {
+      xmlDeclaration: false,
+    });
     expect(xml).not.toContain('<contato>');
     expect(xml).not.toContain('<email>');
   });

@@ -1,9 +1,9 @@
 import { create } from 'xmlbuilder2';
 import type { XMLBuilder } from 'xmlbuilder2/lib/interfaces.js';
+import type { JsonObject, JsonValue } from '../types.js';
+import { XsdMappingError } from '../validation/errors.js';
 import type { ElementDef } from '../xsd/types.js';
 import type { SchemaWalker } from '../xsd/walker.js';
-import { XsdMappingError } from '../validation/errors.js';
-import type { JsonObject, JsonValue } from '../types.js';
 
 export interface BuildOptions {
   prettyPrint: boolean;
@@ -17,11 +17,7 @@ export interface BuildOptions {
 /**
  * Builds an XML string from a JSON object using the schema walker as a guide.
  */
-export function buildXml(
-  json: JsonObject,
-  walker: SchemaWalker,
-  options: BuildOptions,
-): string {
+export function buildXml(json: JsonObject, walker: SchemaWalker, options: BuildOptions): string {
   const rootName = walker.schema.rootElement;
   const rootEl = walker.lookupElement(rootName);
   if (!rootEl) {
@@ -29,8 +25,7 @@ export function buildXml(
   }
 
   // The input JSON may be { rootName: { ...fields } } or just { ...fields }
-  const rootValue: JsonValue =
-    json[rootName] !== undefined ? json[rootName] : json;
+  const rootValue: JsonValue = json[rootName] !== undefined ? json[rootName] : json;
 
   const xmlDeclarationOptions = options.xmlDeclaration
     ? { version: '1.0', encoding: options.encoding }
@@ -84,11 +79,23 @@ function buildWildcardValue(
     if (Array.isArray(val)) {
       for (let i = 0; i < val.length; i++) {
         const childNode = node.ele(key);
-        buildWildcardValue(childNode, val[i] as JsonValue, `${path}.${key}[${i}]`, attributePrefix, textNodeKey);
+        buildWildcardValue(
+          childNode,
+          val[i] as JsonValue,
+          `${path}.${key}[${i}]`,
+          attributePrefix,
+          textNodeKey,
+        );
       }
     } else {
       const childNode = node.ele(key);
-      buildWildcardValue(childNode, val as JsonValue, `${path}.${key}`, attributePrefix, textNodeKey);
+      buildWildcardValue(
+        childNode,
+        val as JsonValue,
+        `${path}.${key}`,
+        attributePrefix,
+        textNodeKey,
+      );
     }
   }
 }
@@ -164,14 +171,7 @@ function buildElement(
       for (let i = 0; i < childValue.length; i++) {
         const item = childValue[i];
         const childNode = node.ele(childEl.name);
-        buildElement(
-          childNode,
-          childEl,
-          item,
-          walker,
-          options,
-          `${path}.${childEl.name}[${i}]`,
-        );
+        buildElement(childNode, childEl, item, walker, options, `${path}.${childEl.name}[${i}]`);
       }
     } else {
       const childNode = node.ele(childEl.name);
@@ -190,11 +190,23 @@ function buildElement(
       if (Array.isArray(wildcardValue)) {
         for (let i = 0; i < wildcardValue.length; i++) {
           const childNode = node.ele(key);
-          buildWildcardValue(childNode, wildcardValue[i] as JsonValue, `${path}.${key}[${i}]`, attributePrefix, textNodeKey);
+          buildWildcardValue(
+            childNode,
+            wildcardValue[i] as JsonValue,
+            `${path}.${key}[${i}]`,
+            attributePrefix,
+            textNodeKey,
+          );
         }
       } else {
         const childNode = node.ele(key);
-        buildWildcardValue(childNode, wildcardValue as JsonValue, `${path}.${key}`, attributePrefix, textNodeKey);
+        buildWildcardValue(
+          childNode,
+          wildcardValue as JsonValue,
+          `${path}.${key}`,
+          attributePrefix,
+          textNodeKey,
+        );
       }
     }
   }

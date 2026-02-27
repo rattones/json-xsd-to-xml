@@ -11,11 +11,17 @@
     "xml-builder",
     "typescript"
   ],
+  "homepage": "https://github.com/rattones/json-xsd-to-xml#readme",
+  "bugs": {
+    "url": "https://github.com/rattones/json-xsd-to-xml/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rattones/json-xsd-to-xml.git"
+  },
   "license": "MIT",
+  "author": "Marcelo Ratton",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -28,13 +34,14 @@
       }
     }
   },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
   "files": [
     "dist"
   ],
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18"
-  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -59,12 +66,9 @@
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/json-xsd-to-xml.git"
+  "engines": {
+    "node": ">=18"
   },
-  "bugs": {
-    "url": "https://github.com/your-username/json-xsd-to-xml/issues"
-  },
-  "homepage": "https://github.com/your-username/json-xsd-to-xml#readme"
+  "module": "./dist/index.mjs",
+  "sideEffects": false
 }

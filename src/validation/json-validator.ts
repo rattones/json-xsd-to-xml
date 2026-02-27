@@ -1,8 +1,8 @@
+import type { JsonObject, JsonValue } from '../types.js';
 import type { ElementDef } from '../xsd/types.js';
 import type { SchemaWalker } from '../xsd/walker.js';
 import { XsdValidationError } from './errors.js';
 import type { ValidationIssue } from './errors.js';
-import type { JsonObject, JsonValue } from '../types.js';
 
 /**
  * Validates a JSON object against the SchemaModel.
@@ -26,7 +26,15 @@ export function validateJson(
   }
 
   const rootValue = json[rootName] !== undefined ? json : { [rootName]: json };
-  validateElement(rootEl, rootValue[rootName] as JsonValue, `$.${rootName}`, walker, issues, attributePrefix, textNodeKey);
+  validateElement(
+    rootEl,
+    rootValue[rootName] as JsonValue,
+    `$.${rootName}`,
+    walker,
+    issues,
+    attributePrefix,
+    textNodeKey,
+  );
 
   if (issues.length > 0) {
     throw new XsdValidationError(issues);
@@ -112,13 +120,23 @@ function validateElement(
       continue;
     }
     if (childValue !== undefined && childValue !== null) {
-      validateElement(childEl, childValue, `${path}.${childEl.name}`, walker, issues, attributePrefix, textNodeKey);
+      validateElement(
+        childEl,
+        childValue,
+        `${path}.${childEl.name}`,
+        walker,
+        issues,
+        attributePrefix,
+        textNodeKey,
+      );
     }
   }
 
   // In strict mode, warn about keys not in schema (not attributes, not in children, not textNodeKey)
   const knownChildren = new Set(resolvedChildren.map((e) => e.name));
-  const knownAttrs = new Set(walker.getAttributesForElement(el).map((a) => `${attributePrefix}${a.name}`));
+  const knownAttrs = new Set(
+    walker.getAttributesForElement(el).map((a) => `${attributePrefix}${a.name}`),
+  );
   const elementHasWildcard = walker.hasWildcardForElement(el);
   for (const key of Object.keys(obj)) {
     if (key === textNodeKey) continue;

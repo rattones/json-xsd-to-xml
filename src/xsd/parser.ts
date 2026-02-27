@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
 import { XsdParseError } from '../validation/errors.js';
 import type {
@@ -49,7 +49,7 @@ function attr(node: RawNode, name: string, fallback = ''): string {
 function parseOccurs(value: string | undefined): number | 'unbounded' {
   if (value === 'unbounded') return 'unbounded';
   if (value === undefined) return 1;
-  const n = parseInt(value, 10);
+  const n = Number.parseInt(value, 10);
   return Number.isNaN(n) ? 1 : n;
 }
 
@@ -76,9 +76,11 @@ function parseAttribute(raw: RawNode): AttributeDef {
 // ComplexType parsing
 // ---------------------------------------------------------------------------
 
-function extractCompositorElements(
-  raw: RawNode,
-): { compositor: Compositor; elements: RawNode[]; hasWildcard: boolean } {
+function extractCompositorElements(raw: RawNode): {
+  compositor: Compositor;
+  elements: RawNode[];
+  hasWildcard: boolean;
+} {
   if (raw['xs:sequence']) {
     const seq = (raw['xs:sequence'] as RawNode[])[0] ?? {};
     return {
@@ -225,9 +227,7 @@ export async function parseXsd(xsdPath: string, baseDir?: string): Promise<Schem
 
   const schema = parsed['xs:schema'] as RawNode | undefined;
   if (!schema) {
-    throw new XsdParseError(
-      `Invalid XSD: root element <xs:schema> not found in ${resolvedPath}`,
-    );
+    throw new XsdParseError(`Invalid XSD: root element <xs:schema> not found in ${resolvedPath}`);
   }
 
   const targetNamespace = schema['@_targetNamespace'] as string | undefined;

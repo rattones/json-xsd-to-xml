@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parseXsd } from '../src/xsd/parser.js';
 
@@ -15,7 +15,9 @@ describe('parseXsd', () => {
     expect(model.elements.has('person')).toBe(true);
     expect(model.complexTypes.has('PersonType')).toBe(true);
 
-    const ct = model.complexTypes.get('PersonType')!;
+    const ct = model.complexTypes.get('PersonType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.compositor).toBe('sequence');
     expect(ct.elements).toHaveLength(3);
     expect(ct.elements[0].name).toBe('name');
@@ -25,9 +27,13 @@ describe('parseXsd', () => {
     expect(ct.elements[2].minOccurs).toBe(0);
 
     expect(ct.attributes).toHaveLength(2);
-    const idAttr = ct.attributes.find((a) => a.name === 'id')!;
+    const idAttr = ct.attributes.find((a) => a.name === 'id');
+    expect(idAttr).toBeDefined();
+    if (!idAttr) return;
     expect(idAttr.use).toBe('required');
-    const activeAttr = ct.attributes.find((a) => a.name === 'active')!;
+    const activeAttr = ct.attributes.find((a) => a.name === 'active');
+    expect(activeAttr).toBeDefined();
+    if (!activeAttr) return;
     expect(activeAttr.use).toBe('optional');
     expect(activeAttr.default).toBe('true');
   });
@@ -40,8 +46,12 @@ describe('parseXsd', () => {
     expect(model.complexTypes.has('CustomerType')).toBe(true);
     expect(model.complexTypes.has('ItemType')).toBe(true);
 
-    const orderCt = model.complexTypes.get('OrderType')!;
-    const itemEl = orderCt.elements.find((e) => e.name === 'item')!;
+    const orderCt = model.complexTypes.get('OrderType');
+    expect(orderCt).toBeDefined();
+    if (!orderCt) return;
+    const itemEl = orderCt.elements.find((e) => e.name === 'item');
+    expect(itemEl).toBeDefined();
+    if (!itemEl) return;
     expect(itemEl.maxOccurs).toBe('unbounded');
     expect(itemEl.isArray).toBe(true);
   });
@@ -50,15 +60,20 @@ describe('parseXsd', () => {
     const model = await parseXsd(resolve(fixturesDir, 'inline.xsd'));
 
     expect(model.rootElement).toBe('catalog');
-    const catalogEl = model.elements.get('catalog')!;
+    const catalogEl = model.elements.get('catalog');
+    expect(catalogEl).toBeDefined();
+    if (!catalogEl) return;
     expect(catalogEl.inlineComplexType).toBeDefined();
+    if (!catalogEl.inlineComplexType) return;
 
-    const productEl = catalogEl.inlineComplexType!.elements.find((e) => e.name === 'product')!;
+    const productEl = catalogEl.inlineComplexType.elements.find((e) => e.name === 'product');
     expect(productEl).toBeDefined();
+    if (!productEl) return;
     expect(productEl.isArray).toBe(true);
     expect(productEl.inlineComplexType).toBeDefined();
-    expect(productEl.inlineComplexType!.elements).toHaveLength(3);
-    expect(productEl.inlineComplexType!.attributes[0].name).toBe('id');
+    if (!productEl.inlineComplexType) return;
+    expect(productEl.inlineComplexType.elements).toHaveLength(3);
+    expect(productEl.inlineComplexType.attributes[0].name).toBe('id');
   });
 
   it('throws XsdParseError when file does not exist', async () => {
@@ -74,14 +89,17 @@ describe('parseXsd', () => {
 describe('parseXsd — xs:choice', () => {
   it('parses IdentificacaoPrestadorType as compositor "choice"', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('IdentificacaoPrestadorType')!;
+    const ct = model.complexTypes.get('IdentificacaoPrestadorType');
     expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.compositor).toBe('choice');
   });
 
   it('choice elements are CNPJ, CPF, codigoPrestadorNaOperadora', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('IdentificacaoPrestadorType')!;
+    const ct = model.complexTypes.get('IdentificacaoPrestadorType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     const names = ct.elements.map((e) => e.name);
     expect(names).toContain('CNPJ');
     expect(names).toContain('CPF');
@@ -91,7 +109,9 @@ describe('parseXsd — xs:choice', () => {
 
   it('all choice branches have minOccurs=0', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('IdentificacaoPrestadorType')!;
+    const ct = model.complexTypes.get('IdentificacaoPrestadorType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     for (const el of ct.elements) {
       expect(el.minOccurs).toBe(0);
     }
@@ -105,21 +125,25 @@ describe('parseXsd — xs:choice', () => {
 describe('parseXsd — xs:complexContent/xs:extension', () => {
   it('OrigemType has extends = "LocalizacaoBaseType"', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('OrigemType')!;
+    const ct = model.complexTypes.get('OrigemType');
     expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.extends).toBe('LocalizacaoBaseType');
   });
 
   it('DestinoType has extends = "LocalizacaoBaseType"', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('DestinoType')!;
+    const ct = model.complexTypes.get('DestinoType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.extends).toBe('LocalizacaoBaseType');
   });
 
   it('PrestadorEstendidoType extends LocalizacaoBaseType and declares own elements', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-mensagem.xsd'));
-    const ct = model.complexTypes.get('PrestadorEstendidoType')!;
+    const ct = model.complexTypes.get('PrestadorEstendidoType');
     expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.extends).toBe('LocalizacaoBaseType');
     const names = ct.elements.map((e) => e.name);
     expect(names).toContain('nomeFantasia');
@@ -192,7 +216,9 @@ describe('parseXsd — xs:include', () => {
 
   it('EnderecoType from include has correct elements', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-with-include.xsd'));
-    const ct = model.complexTypes.get('EnderecoType')!;
+    const ct = model.complexTypes.get('EnderecoType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     const names = ct.elements.map((e) => e.name);
     expect(names).toContain('logradouro');
     expect(names).toContain('numero');
@@ -202,7 +228,9 @@ describe('parseXsd — xs:include', () => {
 
   it('ContatoType from include has optional telefone and email (minOccurs=0)', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-with-include.xsd'));
-    const ct = model.complexTypes.get('ContatoType')!;
+    const ct = model.complexTypes.get('ContatoType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     for (const el of ct.elements) {
       expect(el.minOccurs).toBe(0);
     }
@@ -215,10 +243,16 @@ describe('parseXsd — xs:include', () => {
 
   it('PrestadorCompletoType references EnderecoType and ContatoType from included schema', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'tiss-with-include.xsd'));
-    const ct = model.complexTypes.get('PrestadorCompletoType')!;
-    const enderecoEl = ct.elements.find((e) => e.name === 'endereco')!;
+    const ct = model.complexTypes.get('PrestadorCompletoType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    const enderecoEl = ct.elements.find((e) => e.name === 'endereco');
+    expect(enderecoEl).toBeDefined();
+    if (!enderecoEl) return;
     expect(enderecoEl.typeName).toBe('EnderecoType');
-    const contatoEl = ct.elements.find((e) => e.name === 'contato')!;
+    const contatoEl = ct.elements.find((e) => e.name === 'contato');
+    expect(contatoEl).toBeDefined();
+    if (!contatoEl) return;
     expect(contatoEl.typeName).toBe('ContatoType');
   });
 
@@ -237,8 +271,9 @@ describe('parseXsd — xs:include', () => {
 describe('parseXsd — xs:any', () => {
   it('marks EnvelopeType hasWildcard when xs:any is present', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'any-envelope.xsd'));
-    const ct = model.complexTypes.get('EnvelopeType')!;
+    const ct = model.complexTypes.get('EnvelopeType');
     expect(ct).toBeDefined();
+    if (!ct) return;
     expect(ct.hasWildcard).toBe(true);
   });
 
@@ -249,7 +284,9 @@ describe('parseXsd — xs:any', () => {
 
   it('still captures known sequence elements alongside xs:any', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'any-envelope.xsd'));
-    const ct = model.complexTypes.get('EnvelopeType')!;
+    const ct = model.complexTypes.get('EnvelopeType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
     const cabecalho = ct.elements.find((e) => e.name === 'cabecalho');
     expect(cabecalho).toBeDefined();
     expect(cabecalho?.typeName).toBe('xs:string');
@@ -273,8 +310,12 @@ describe('parseXsd — xs:import', () => {
 
   it('PessoaType contato element references ct:ContactInfoType', async () => {
     const model = await parseXsd(resolve(fixturesDir, 'person-with-import.xsd'));
-    const ct = model.complexTypes.get('PessoaType')!;
-    const contatoEl = ct.elements.find((e) => e.name === 'contato')!;
+    const ct = model.complexTypes.get('PessoaType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    const contatoEl = ct.elements.find((e) => e.name === 'contato');
+    expect(contatoEl).toBeDefined();
+    if (!contatoEl) return;
     expect(contatoEl.typeName).toBe('ct:ContactInfoType');
   });
 
