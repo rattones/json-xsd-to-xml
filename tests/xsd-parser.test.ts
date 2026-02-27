@@ -446,43 +446,71 @@ describe('parseXsd — circular include + default-NS import with xs:any (TISS pa
   // 5 s hard cap: if cycle-detection is broken the test would hang indefinitely
   const TIMEOUT = 5_000;
 
-  it('completes without hanging (no infinite loop)', async () => {
-    await expect(parseXsd(resolve(fixturesDir, 'mutual-a.xsd'))).resolves.toBeDefined();
-  }, TIMEOUT);
+  it(
+    'completes without hanging (no infinite loop)',
+    async () => {
+      await expect(parseXsd(resolve(fixturesDir, 'mutual-a.xsd'))).resolves.toBeDefined();
+    },
+    TIMEOUT,
+  );
 
-  it('registers TypeWithSig from mutual-a.xsd', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    expect(model.complexTypes.has('TypeWithSig')).toBe(true);
-  }, TIMEOUT);
+  it(
+    'registers TypeWithSig from mutual-a.xsd',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      expect(model.complexTypes.has('TypeWithSig')).toBe(true);
+    },
+    TIMEOUT,
+  );
 
-  it('registers TypeB from cyclic mutual-b.xsd', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    expect(model.complexTypes.has('TypeB')).toBe(true);
-  }, TIMEOUT);
+  it(
+    'registers TypeB from cyclic mutual-b.xsd',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      expect(model.complexTypes.has('TypeB')).toBe(true);
+    },
+    TIMEOUT,
+  );
 
-  it('registers SignatureType from default-namespace import (mutual-dsig.xsd)', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    expect(model.complexTypes.has('SignatureType')).toBe(true);
-  }, TIMEOUT);
+  it(
+    'registers SignatureType from default-namespace import (mutual-dsig.xsd)',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      expect(model.complexTypes.has('SignatureType')).toBe(true);
+    },
+    TIMEOUT,
+  );
 
-  it('registers SignatureType under the dsig: prefix', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    expect(model.complexTypes.has('dsig:SignatureType')).toBe(true);
-  }, TIMEOUT);
+  it(
+    'registers SignatureType under the dsig: prefix',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      expect(model.complexTypes.has('dsig:SignatureType')).toBe(true);
+    },
+    TIMEOUT,
+  );
 
-  it('marks SignatureType hasWildcard=true (contains xs:any from default-NS schema)', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    const ct = model.complexTypes.get('SignatureType');
-    expect(ct).toBeDefined();
-    if (!ct) return;
-    expect(ct.hasWildcard).toBe(true);
-  }, TIMEOUT);
+  it(
+    'marks SignatureType hasWildcard=true (contains xs:any from default-NS schema)',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      const ct = model.complexTypes.get('SignatureType');
+      expect(ct).toBeDefined();
+      if (!ct) return;
+      expect(ct.hasWildcard).toBe(true);
+    },
+    TIMEOUT,
+  );
 
-  it('marks SignedInfoType hasWildcard=true', async () => {
-    const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
-    const ct = model.complexTypes.get('SignedInfoType');
-    expect(ct).toBeDefined();
-    if (!ct) return;
-    expect(ct.hasWildcard).toBe(true);
-  }, TIMEOUT);
+  it(
+    'marks SignedInfoType hasWildcard=true',
+    async () => {
+      const model = await parseXsd(resolve(fixturesDir, 'mutual-a.xsd'));
+      const ct = model.complexTypes.get('SignedInfoType');
+      expect(ct).toBeDefined();
+      if (!ct) return;
+      expect(ct.hasWildcard).toBe(true);
+    },
+    TIMEOUT,
+  );
 });
