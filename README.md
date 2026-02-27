@@ -139,26 +139,6 @@ try {
 }
 ```
 
-## XSD Features Supported
-
-| Feature                                      | Status |
-|----------------------------------------------|--------|
-| `xs:element` (top-level & nested)            | ✅     |
-| `xs:attribute` (required / optional)         | ✅     |
-| `xs:complexType` with `xs:sequence`          | ✅     |
-| `xs:complexType` with `xs:all`               | ✅     |
-| `xs:complexType` with `xs:choice`            | ✅     |
-| Inline `xs:complexType`                      | ✅     |
-| `maxOccurs="unbounded"` (arrays)             | ✅     |
-| `minOccurs` / `maxOccurs` validation         | ✅     |
-| `xs:simpleType` (restriction)                | ✅     |
-| `xs:simpleContent` (text + attrs)            | ✅     |
-| `targetNamespace` (xmlns on root)            | ✅     |
-| `xs:complexContent` / `xs:extension`         | ✅     |
-| `xs:include` (external type libraries)       | ✅     |
-| `xs:any`                                     | ✅     |
-| `xs:import` (cross-namespace)                | ✅     |
-
 ## xs:choice
 
 When a `xs:complexType` uses `xs:choice`, only the JSON keys with non-`null` values are emitted. All other branches are silently skipped.
@@ -390,6 +370,28 @@ Output:
 ```
 
 Non-resolvable `schemaLocation` paths in `xs:import` are silently skipped, consistent with the behaviour of `xs:include`.
+
+
+## XSD Features Supported
+
+| Feature                                      | Status |
+|----------------------------------------------|--------|
+| `xs:element` (top-level & nested)            | ✅     |
+| `xs:attribute` (required / optional)         | ✅     |
+| `xs:complexType` with `xs:sequence`          | ✅     |
+| `xs:complexType` with `xs:all`               | ✅     |
+| `xs:complexType` with `xs:choice`            | ✅     |
+| Inline `xs:complexType`                      | ✅     |
+| `maxOccurs="unbounded"` (arrays)             | ✅     |
+| `minOccurs` / `maxOccurs` validation         | ✅     |
+| `xs:simpleType` (restriction)                | ✅     |
+| `xs:simpleContent` (text + attrs)            | ✅     |
+| `targetNamespace` (xmlns on root)            | ✅     |
+| `xs:complexContent` / `xs:extension`         | ✅     |
+| `xs:include` (external type libraries)       | ✅     |
+| `xs:any`                                     | ✅     |
+| `xs:import` (cross-namespace)                | ✅     |
+
 
 ## License
 
