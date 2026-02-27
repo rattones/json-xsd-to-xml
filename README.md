@@ -394,3 +394,9 @@ Non-resolvable `schemaLocation` paths in `xs:import` are silently skipped, consi
 ## License
 
 MIT
+
+---
+
+Gostou? Me paga um café. ☕
+
+<img src="src/assets/qrcode-pix.png" alt="QR Code Pix" width="180"/>
