@@ -93,10 +93,7 @@ function normalizeXsPrefix(node: unknown): unknown {
  * instruction with `UTF-8` so the parser can proceed without errors.
  */
 function normalizeXmlEncodingDeclaration(content: string): string {
-  return content.replace(
-    /(<\?xml\b[^?]*?)\s+encoding=["'][^"']*["']/i,
-    '$1 encoding="UTF-8"',
-  );
+  return content.replace(/(<\?xml\b[^?]*?)\s+encoding=["'][^"']*["']/i, '$1 encoding="UTF-8"');
 }
 
 function makeParser(): XMLParser {
