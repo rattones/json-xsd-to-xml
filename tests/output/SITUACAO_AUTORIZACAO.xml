@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<situacaoAutorizacaoWS xmlns="http://www.ans.gov.br/padroes/tiss/schemas">
+  <cabecalho>
+    <identificacaoTransacao>
+      <tipoTransacao>SITUACAO_AUTORIZACAO</tipoTransacao>
+      <sequencialTransacao>1</sequencialTransacao>
+      <dataRegistroTransacao>2025-05-20</dataRegistroTransacao>
+      <horaRegistroTransacao>14:30:00</horaRegistroTransacao>
+    </identificacaoTransacao>
+    <origem>
+      <registroANS>123456</registroANS>
+    </origem>
+    <destino>
+      <identificacaoPrestador>
+        <codigoPrestadorNaOperadora>987654321</codigoPrestadorNaOperadora>
+      </identificacaoPrestador>
+    </destino>
+    <Padrao>4.03.00</Padrao>
+  </cabecalho>
+  <situacaoAutorizacao>
+    <mensagemErro>
+      <codigoGlosa>01</codigoGlosa>
+      <descricaoGlosa>GLOSA DE TESTE</descricaoGlosa>
+    </mensagemErro>
+  </situacaoAutorizacao>
+  <hash>hash_de_verificacao_aqui</hash>
+</situacaoAutorizacaoWS>

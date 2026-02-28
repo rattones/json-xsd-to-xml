@@ -37,8 +37,28 @@ const XS_SIMPLE_TYPES = new Set([
   'xs:anyType',
 ]);
 
+/**
+ * Strips the namespace prefix from a qualified name.
+ * e.g. "ans:cabecalhoTransacao" → "cabecalhoTransacao"
+ *       "cabecalhoTransacao"      → "cabecalhoTransacao"
+ */
+function localName(name: string): string {
+  const i = name.indexOf(':');
+  return i >= 0 ? name.slice(i + 1) : name;
+}
+
 export class SchemaWalker {
   constructor(private readonly model: SchemaModel) {}
+
+  /**
+   * Looks up a ComplexTypeDef by qualified name, falling back to the local
+   * name (without namespace prefix) when the prefixed key is not in the map.
+   * This handles xs:include schemas where types are registered without prefix
+   * but referenced with a prefix (e.g. type="ans:cabecalhoTransacao").
+   */
+  private lookupCT(name: string): ComplexTypeDef | undefined {
+    return this.model.complexTypes.get(name) ?? this.model.complexTypes.get(localName(name));
+  }
 
   /**
    * Returns the top-level ElementDef for the given name, if it exists.
@@ -62,7 +82,7 @@ export class SchemaWalker {
    */
   resolveComplexTypeForElement(el: ElementDef): ComplexTypeDef | undefined {
     if (el.inlineComplexType) return el.inlineComplexType;
-    if (el.typeName) return this.model.complexTypes.get(el.typeName);
+    if (el.typeName) return this.lookupCT(el.typeName);
     return undefined;
   }
 
@@ -103,7 +123,7 @@ export class SchemaWalker {
     if (visited.has(ct.name)) return ct.elements;
     visited.add(ct.name);
     if (!ct.extends) return ct.elements;
-    const baseCt = this.model.complexTypes.get(ct.extends);
+    const baseCt = this.lookupCT(ct.extends);
     if (!baseCt) return ct.elements;
     return [...this.resolveAllElements(baseCt, visited), ...ct.elements];
   }
@@ -115,7 +135,7 @@ export class SchemaWalker {
     if (visited.has(ct.name)) return ct.attributes;
     visited.add(ct.name);
     if (!ct.extends) return ct.attributes;
-    const baseCt = this.model.complexTypes.get(ct.extends);
+    const baseCt = this.lookupCT(ct.extends);
     if (!baseCt) return ct.attributes;
     return [...this.resolveAllAttributes(baseCt, visited), ...ct.attributes];
   }
@@ -137,7 +157,7 @@ export class SchemaWalker {
     if (ct.hasWildcard) return true;
     if (!ct.extends || visited.has(ct.name)) return false;
     visited.add(ct.name);
-    const baseCt = this.model.complexTypes.get(ct.extends);
+    const baseCt = this.lookupCT(ct.extends);
     return baseCt ? this.resolveHasWildcard(baseCt, visited) : false;
   }
 

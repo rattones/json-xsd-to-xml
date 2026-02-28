@@ -1,6 +1,6 @@
 {
   "name": "json-xsd-to-xml",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "Convert a JSON object to an XML string guided by an XSD schema",
   "keywords": [
     "json",
@@ -46,6 +46,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "test:functional": "vitest run tests/functional.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "biome check src tests",

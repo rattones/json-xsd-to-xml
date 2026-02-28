@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solicitacaoProcedimentoWS xmlns="http://www.ans.gov.br/padroes/tiss/schemas">
+  <cabecalho>
+    <identificacaoTransacao>
+      <tipoTransacao>SOLICITACAO_PROCEDIMENTOS</tipoTransacao>
+      <sequencialTransacao>1001</sequencialTransacao>
+      <dataRegistroTransacao>2023-10-27</dataRegistroTransacao>
+      <horaRegistroTransacao>10:00:00</horaRegistroTransacao>
+    </identificacaoTransacao>
+    <origem>
+      <identificacaoPrestador>
+        <CNPJ>00000000000000</CNPJ>
+      </identificacaoPrestador>
+    </origem>
+    <destino>
+      <registroANS>123456</registroANS>
+    </destino>
+    <Padrao>4.03.00</Padrao>
+  </cabecalho>
+  <solicitacaoProcedimento>
+    <solicitacaoSP-SADT>
+      <cabecalhoSolicitacao>
+        <registroANS>123456</registroANS>
+        <numeroGuiaPrestador>987654321</numeroGuiaPrestador>
+      </cabecalhoSolicitacao>
+      <dadosBeneficiario>
+        <numeroCarteira>ABC123456789</numeroCarteira>
+        <atendimentoRN>N</atendimentoRN>
+      </dadosBeneficiario>
+      <dadosSolicitante>
+        <contratadoSolicitante>
+          <cnpjContratado>00000000000000</cnpjContratado>
+        </contratadoSolicitante>
+        <nomeContratadoSolicitante>Nome Contratado</nomeContratadoSolicitante>
+        <profissionalSolicitante>
+          <nomeProfissional>Dr. Nome Solicitante</nomeProfissional>
+          <conselhoProfissional>CRM</conselhoProfissional>
+          <numeroConselhoProfissional>12345</numeroConselhoProfissional>
+          <UF>SP</UF>
+          <CBOS>2231F0</CBOS>
+        </profissionalSolicitante>
+      </dadosSolicitante>
+    </solicitacaoSP-SADT>
+  </solicitacaoProcedimento>
+  <hash>00000000000000000000000000000000</hash>
+</solicitacaoProcedimentoWS>

@@ -1,0 +1,35 @@
+{
+  "solicitacaoStatusAutorizacaoWS": {
+    "cabecalho": {
+      "identificacaoTransacao": {
+        "tipoTransacao": "SOLICITA_STATUS_AUTORIZACAO",
+        "sequencialTransacao": "1001",
+        "dataRegistroTransacao": "2025-09-16",
+        "horaRegistroTransacao": "10:54:58"
+      },
+      "origem": {
+        "identificacaoPrestador": {
+          "codigoPrestadorNaOperadora": "51100001"
+        }
+      },
+      "destino": {
+        "registroANS": "000582"
+      },
+      "Padrao": "4.03.00"
+    },
+    "solicitacaoStatusAutorizacao": {
+      "identificacaoSolicitacao": {
+        "registroANS": "000582",
+        "numeroGuiaPrestador": "12345"
+      },
+      "dadosBeneficiario": {
+        "numeroCarteira": "ABC123456",
+        "atendimentoRN": "N"
+      },
+      "dadosContratado": {
+        "codigoPrestadorNaOperadora": "51100001"
+      }
+    },
+    "hash": "3f64256fa67a6b72b85768722c635c4b"
+  }
+}

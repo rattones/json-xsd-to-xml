@@ -1,0 +1,52 @@
+{
+  "loteGuiasWS": {
+    "cabecalho": {
+      "identificacaoTransacao": {
+        "tipoTransacao": "ENVIO_LOTE_GUIAS",
+        "sequencialTransacao": "1",
+        "dataRegistroTransacao": "2023-10-27",
+        "horaRegistroTransacao": "10:00:00"
+      },
+      "origem": {
+        "identificacaoPrestador": {
+          "CNPJ": "12345678000199"
+        }
+      },
+      "destino": {
+        "registroANS": "999999"
+      },
+      "Padrao": "4.03.00"
+    },
+    "loteGuias": {
+      "numeroLote": "1001",
+      "guiasTISS": {
+        "guiaConsulta": {
+          "cabecalhoConsulta": {
+            "registroANS": "999999",
+            "numeroGuiaPrestador": "987654321"
+          },
+          "dadosBeneficiario": {
+            "numeroCarteira": "ABC123456",
+            "atendimentoRN": "N"
+          },
+          "contratadoExecutante": {
+            "cnpjContratado": "12345678000199",
+            "CNES": "1234567"
+          },
+          "indicacaoAcidente": "0",
+          "dadosAtendimento": {
+            "regimeAtendimento": "01",
+            "dataAtendimento": "2023-10-26",
+            "tipoConsulta": "1",
+            "procedimento": {
+              "codigoTabela": "22",
+              "codigoProcedimento": "10101012",
+              "valorProcedimento": "0.00"
+            }
+          }
+        }
+      }
+    },
+    "hash": "abcdef1234567890abcdef1234567890"
+  }
+}

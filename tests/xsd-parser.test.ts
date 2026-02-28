@@ -542,7 +542,7 @@ describe('parseXsd — circular include + default-NS import with xs:any (TISS pa
   it(
     'parses an ISO-8859-1 XSD chain from file bytes without corruption',
     async () => {
-      const schemaDir = resolve(__dirname, '../schema/tiss-comunicacao-040300');
+      const schemaDir = resolve(__dirname, 'schema/tiss-comunicacao-040300');
       const model = await parseXsd(resolve(schemaDir, 'tissWebServicesV4_03_00.xsd'));
       expect(model.rootElement).toBeTruthy();
       expect(model.elements.size).toBeGreaterThan(0);
@@ -554,7 +554,7 @@ describe('parseXsd — circular include + default-NS import with xs:any (TISS pa
   it(
     'parses a WSDL with ISO-8859-1 encoding and resolves xs:import to find xs:elements',
     async () => {
-      const schemaDir = resolve(__dirname, '../schema/tiss-comunicacao-040300');
+      const schemaDir = resolve(__dirname, 'schema/tiss-comunicacao-040300');
       const model = await parseXsd(
         resolve(schemaDir, 'tissSolicitacaoStatusAutorizacaoV4_03_00.wsdl'),
       );

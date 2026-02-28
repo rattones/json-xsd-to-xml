@@ -1,0 +1,47 @@
+{
+  "solicitacaoProcedimentoWS": {
+    "cabecalho": {
+      "identificacaoTransacao": {
+        "tipoTransacao": "SOLICITACAO_PROCEDIMENTOS",
+        "sequencialTransacao": "1001",
+        "dataRegistroTransacao": "2023-10-27",
+        "horaRegistroTransacao": "10:00:00"
+      },
+      "origem": {
+        "identificacaoPrestador": {
+          "CNPJ": "00000000000000"
+        }
+      },
+      "destino": {
+        "registroANS": "123456"
+      },
+      "Padrao": "4.03.00"
+    },
+    "solicitacaoProcedimento": {
+      "solicitacaoSP-SADT": {
+        "cabecalhoSolicitacao": {
+          "registroANS": "123456",
+          "numeroGuiaPrestador": "987654321"
+        },
+        "dadosBeneficiario": {
+          "numeroCarteira": "ABC123456789",
+          "atendimentoRN": "N"
+        },
+        "dadosSolicitante": {
+          "contratadoSolicitante": {
+            "cnpjContratado": "00000000000000"
+          },
+          "nomeContratadoSolicitante": "Nome Contratado",
+          "profissionalSolicitante": {
+            "nomeProfissional": "Dr. Nome Solicitante",
+            "conselhoProfissional": "CRM",
+            "numeroConselhoProfissional": "12345",
+            "UF": "SP",
+            "CBOS": "2231F0"
+          }
+        }
+      }
+    },
+    "hash": "00000000000000000000000000000000"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "situacaoAutorizacaoWS": {
+    "cabecalho": {
+      "identificacaoTransacao": {
+        "tipoTransacao": "SITUACAO_AUTORIZACAO",
+        "sequencialTransacao": "1",
+        "dataRegistroTransacao": "2025-05-20",
+        "horaRegistroTransacao": "14:30:00"
+      },
+      "origem": {
+        "registroANS": "123456"
+      },
+      "destino": {
+        "identificacaoPrestador": {
+          "codigoPrestadorNaOperadora": "987654321"
+        }
+      },
+      "Padrao": "4.03.00"
+    },
+    "situacaoAutorizacao": {
+      "mensagemErro": {
+        "codigoGlosa": "01",
+        "descricaoGlosa": "GLOSA DE TESTE"
+      }
+    },
+    "hash": "hash_de_verificacao_aqui"
+  }
+}

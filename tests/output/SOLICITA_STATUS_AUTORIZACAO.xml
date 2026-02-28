@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solicitacaoStatusAutorizacaoWS xmlns="http://www.ans.gov.br/padroes/tiss/schemas">
+  <cabecalho>
+    <identificacaoTransacao>
+      <tipoTransacao>SOLICITA_STATUS_AUTORIZACAO</tipoTransacao>
+      <sequencialTransacao>1001</sequencialTransacao>
+      <dataRegistroTransacao>2025-09-16</dataRegistroTransacao>
+      <horaRegistroTransacao>10:54:58</horaRegistroTransacao>
+    </identificacaoTransacao>
+    <origem>
+      <identificacaoPrestador>
+        <codigoPrestadorNaOperadora>51100001</codigoPrestadorNaOperadora>
+      </identificacaoPrestador>
+    </origem>
+    <destino>
+      <registroANS>000582</registroANS>
+    </destino>
+    <Padrao>4.03.00</Padrao>
+  </cabecalho>
+  <solicitacaoStatusAutorizacao>
+    <identificacaoSolicitacao>
+      <registroANS>000582</registroANS>
+      <numeroGuiaPrestador>12345</numeroGuiaPrestador>
+    </identificacaoSolicitacao>
+    <dadosBeneficiario>
+      <numeroCarteira>ABC123456</numeroCarteira>
+      <atendimentoRN>N</atendimentoRN>
+    </dadosBeneficiario>
+    <dadosContratado>
+      <codigoPrestadorNaOperadora>51100001</codigoPrestadorNaOperadora>
+    </dadosContratado>
+  </solicitacaoStatusAutorizacao>
+  <hash>3f64256fa67a6b72b85768722c635c4b</hash>
+</solicitacaoStatusAutorizacaoWS>
