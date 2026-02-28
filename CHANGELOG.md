@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Applied `npm audit fix --force` to address **3 vulnerabilities** (1 low, 2 moderate)
+  found in devDependencies.
+- Bumped `vitest` and `@vitest/coverage-v8` from `3.0.7` → `3.2.4`.
+- Bumped `typescript` from `5.7.3` → `5.9.3`.
+- All 97 tests pass, build and lint are clean after the update — no production
+  code or public API was affected.
+
 ### Fixed
 - XSD files declaring `encoding="ISO-8859-1"` (or any non-UTF-8 encoding) in their
   `<?xml ...?>` header no longer cause a _"premature end of file (1:1)"_ parse error.

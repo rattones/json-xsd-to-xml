@@ -15,6 +15,7 @@
 - Resolves external type definitions via `xs:include`
 - Optional **strict validation** that reports all constraint violations before generating XML
 - Dual CJS + ESM build, TypeScript-first
+- Handles XSD files with non-UTF-8 encoding declarations (e.g. `encoding="ISO-8859-1"`) transparently
 - Zero native (C/C++) dependencies
 
 ## Install
@@ -391,6 +392,7 @@ Non-resolvable `schemaLocation` paths in `xs:import` are silently skipped, consi
 | `xs:include` (external type libraries)       | ✅     |
 | `xs:any`                                     | ✅     |
 | `xs:import` (cross-namespace)                | ✅     |
+| Non-UTF-8 XSD encoding declarations          | ✅     |
 
 
 ## License
