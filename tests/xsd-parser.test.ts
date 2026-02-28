@@ -513,4 +513,18 @@ describe('parseXsd — circular include + default-NS import with xs:any (TISS pa
     },
     TIMEOUT,
   );
+
+  it('parses an XSD with ISO-8859-1 encoding declaration without errors', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'iso-encoding.xsd'));
+
+    expect(model.rootElement).toBe('person');
+    expect(model.elements.has('person')).toBe(true);
+    expect(model.complexTypes.has('PersonType')).toBe(true);
+
+    const ct = model.complexTypes.get('PersonType');
+    expect(ct).toBeDefined();
+    if (!ct) return;
+    expect(ct.elements).toHaveLength(3);
+    expect(ct.attributes).toHaveLength(2);
+  });
 });

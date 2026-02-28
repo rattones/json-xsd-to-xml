@@ -80,6 +80,25 @@ function normalizeXsPrefix(node: unknown): unknown {
   return node;
 }
 
+/**
+ * Normalises the XML encoding declaration to UTF-8.
+ *
+ * After `readFile(..., 'utf-8')` the file content is already a JS string (UTF-16
+ * internally). Any `encoding="ISO-8859-1"` (or similar) declaration in the original
+ * file is therefore misleading — the bytes have already been decoded correctly by
+ * Node.js.  Leaving a non-UTF-8 encoding in the declaration causes `fast-xml-parser`
+ * to reject the document with a "premature end of file" error at position 1:1.
+ *
+ * This function replaces the `encoding` attribute in the `<?xml ...?>` processing
+ * instruction with `UTF-8` so the parser can proceed without errors.
+ */
+function normalizeXmlEncodingDeclaration(content: string): string {
+  return content.replace(
+    /(<\?xml\b[^?]*?)\s+encoding=["'][^"']*["']/i,
+    '$1 encoding="UTF-8"',
+  );
+}
+
 function makeParser(): XMLParser {
   return new XMLParser({
     ignoreAttributes: false,
@@ -291,7 +310,7 @@ async function parseXsdInternal(
 
   let xsdContent: string;
   try {
-    xsdContent = await readFile(resolvedPath, 'utf-8');
+    xsdContent = normalizeXmlEncodingDeclaration(await readFile(resolvedPath, 'utf-8'));
   } catch (err) {
     throw new XsdParseError(`Cannot read XSD file: ${resolvedPath}`, err);
   }
