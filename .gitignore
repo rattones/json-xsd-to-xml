@@ -1,8 +1,5 @@
 node_modules/
 dist/
-schema/
 coverage/
-dt-json/
-tests/output/
 *.log
 .DS_Store

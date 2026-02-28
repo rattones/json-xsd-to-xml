@@ -1,5 +1,6 @@
 import type { JsonObject, JsonValue } from '../types.js';
 import type { ElementDef } from '../xsd/types.js';
+import { lookupCI, lowerSet } from '../utils.js';
 import type { SchemaWalker } from '../xsd/walker.js';
 import { XsdValidationError } from './errors.js';
 import type { ValidationIssue } from './errors.js';
@@ -95,11 +96,11 @@ function validateElement(
 
   const obj = value as JsonObject;
 
-  // Validate required attributes
+  // Validate required attributes — case-insensitive lookup against JSON keys
   for (const attrDef of walker.getAttributesForElement(el)) {
     if (attrDef.use === 'required') {
       const key = `${attributePrefix}${attrDef.name}`;
-      if (obj[key] === undefined) {
+      if (lookupCI(obj, key) === undefined) {
         issues.push({
           path: `${path}.${key}`,
           message: `Required attribute "${attrDef.name}" is missing.`,
@@ -108,10 +109,10 @@ function validateElement(
     }
   }
 
-  // Validate child elements
+  // Validate child elements — case-insensitive lookup
   const resolvedChildren = walker.getChildElementsForElement(el);
   for (const childEl of resolvedChildren) {
-    const childValue = obj[childEl.name];
+    const childValue = lookupCI(obj, childEl.name);
     if (childEl.minOccurs > 0 && (childValue === undefined || childValue === null)) {
       issues.push({
         path: `${path}.${childEl.name}`,
@@ -133,14 +134,15 @@ function validateElement(
   }
 
   // In strict mode, warn about keys not in schema (not attributes, not in children, not textNodeKey)
-  const knownChildren = new Set(resolvedChildren.map((e) => e.name));
-  const knownAttrs = new Set(
+  // Comparisons are case-insensitive: a JSON key "CNPJ" matches a schema child "cnpj".
+  const knownChildren = lowerSet(resolvedChildren.map((e) => e.name));
+  const knownAttrs = lowerSet(
     walker.getAttributesForElement(el).map((a) => `${attributePrefix}${a.name}`),
   );
   const elementHasWildcard = walker.hasWildcardForElement(el);
   for (const key of Object.keys(obj)) {
     if (key === textNodeKey) continue;
-    if (knownChildren.has(key) || knownAttrs.has(key)) continue;
+    if (knownChildren.has(key.toLowerCase()) || knownAttrs.has(key.toLowerCase())) continue;
     if (elementHasWildcard) continue; // xs:any accepts any additional key
     issues.push({
       path: `${path}.${key}`,

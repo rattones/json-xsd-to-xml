@@ -1,6 +1,7 @@
 import { create } from 'xmlbuilder2';
 import type { XMLBuilder } from 'xmlbuilder2/lib/interfaces.js';
 import type { JsonObject, JsonValue } from '../types.js';
+import { lookupCI, lowerSet } from '../utils.js';
 import { XsdMappingError } from '../validation/errors.js';
 import type { ElementDef } from '../xsd/types.js';
 import type { SchemaWalker } from '../xsd/walker.js';
@@ -25,7 +26,8 @@ export function buildXml(json: JsonObject, walker: SchemaWalker, options: BuildO
   }
 
   // The input JSON may be { rootName: { ...fields } } or just { ...fields }
-  const rootValue: JsonValue = json[rootName] !== undefined ? json[rootName] : json;
+  // Use case-insensitive lookup so keys like { "MensagemTISS": ... } still match
+  const rootValue: JsonValue = lookupCI(json, rootName) !== undefined ? lookupCI(json, rootName)! : json;
 
   const xmlDeclarationOptions = options.xmlDeclaration
     ? { version: '1.0', encoding: options.encoding }
@@ -141,10 +143,11 @@ function buildElement(
 
   const obj = value as JsonObject;
 
-  // Apply attributes
+  // Apply attributes — lookup is case-insensitive; the attribute name in XML
+  // always mirrors the schema declaration (attrDef.name), not the JSON key.
   for (const attrDef of walker.getAttributesForElement(el)) {
     const key = `${attributePrefix}${attrDef.name}`;
-    const attrValue = obj[key];
+    const attrValue = lookupCI(obj, key);
     if (attrValue !== undefined && attrValue !== null) {
       node.att(attrDef.name, String(attrValue));
     } else if (attrDef.default !== undefined) {
@@ -158,11 +161,13 @@ function buildElement(
     return;
   }
 
-  // Apply child elements
+  // Apply child elements — lookup is case-insensitive; the element tag in XML
+  // always mirrors the schema declaration (childEl.name), not the JSON key.
   const resolvedChildren = walker.getChildElementsForElement(el);
-  const knownChildNames = new Set(resolvedChildren.map((c) => c.name));
+  // Keep a lowercased set for xs:any wildcard filtering (O(1) check)
+  const knownChildNames = lowerSet(resolvedChildren.map((c) => c.name));
   for (const childEl of resolvedChildren) {
-    const childValue = obj[childEl.name];
+    const childValue = lookupCI(obj, childEl.name);
     if (childValue === undefined || childValue === null) {
       // Skip optional missing elements
       continue;
@@ -186,7 +191,7 @@ function buildElement(
     for (const key of Object.keys(obj)) {
       if (key === textNodeKey) continue;
       if (key.startsWith(attributePrefix)) continue;
-      if (knownChildNames.has(key)) continue;
+      if (knownChildNames.has(key.toLowerCase())) continue;
       const wildcardValue = obj[key];
       if (wildcardValue === null || wildcardValue === undefined) continue;
       if (Array.isArray(wildcardValue)) {
