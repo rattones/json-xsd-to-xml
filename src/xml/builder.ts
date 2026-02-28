@@ -31,6 +31,8 @@ export function buildXml(json: JsonObject, walker: SchemaWalker, options: BuildO
     ? { version: '1.0', encoding: options.encoding }
     : undefined;
 
+  // create() always produces at least a minimal <?xml version="1.0"?> node.
+  // Pass headless:true to end() when the caller doesn't want the declaration.
   const doc = create(xmlDeclarationOptions ?? {});
 
   if (options.targetNamespace) {
@@ -41,7 +43,7 @@ export function buildXml(json: JsonObject, walker: SchemaWalker, options: BuildO
     buildElement(root, rootEl, rootValue, walker, options, `$.${rootName}`);
   }
 
-  return doc.end({ prettyPrint: options.prettyPrint });
+  return doc.end({ prettyPrint: options.prettyPrint, headless: !options.xmlDeclaration });
 }
 
 /**

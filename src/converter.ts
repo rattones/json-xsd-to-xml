@@ -49,6 +49,13 @@ export interface ConverterOptions {
    * @default false
    */
   strict?: boolean;
+  /**
+   * Override the root element name used for XML generation.
+   * Useful when the schema defines multiple top-level elements (e.g. WSDL) and
+   * the desired root cannot be inferred automatically from the JSON structure.
+   * @example `{ rootElement: 'solicitacaoStatusAutorizacaoWS' }`
+   */
+  rootElement?: string;
 }
 
 /**
@@ -88,9 +95,30 @@ export async function convertJsonToXml(
     attributePrefix = '@',
     textNodeKey = '#text',
     strict = false,
+    rootElement: rootElementOverride,
   } = options;
 
-  const schemaModel = await parseXsd(xsdPath, xsdBaseDir);
+  const rawModel = await parseXsd(xsdPath, xsdBaseDir);
+
+  // Determine effective root element (priority: explicit option > single-key JSON > schema default).
+  // When the JSON is wrapped under one key that is a known top-level element
+  // (e.g. { solicitacaoStatusAutorizacaoWS: { … } }), use that key as root.
+  let schemaModel = rawModel;
+  const jsonKeys = Object.keys(json);
+  if (rootElementOverride && rawModel.elements.has(rootElementOverride)) {
+    // Explicit option always wins.
+    if (rootElementOverride !== rawModel.rootElement) {
+      schemaModel = { ...rawModel, rootElement: rootElementOverride };
+    }
+  } else if (
+    jsonKeys.length === 1 &&
+    rawModel.elements.has(jsonKeys[0]) &&
+    jsonKeys[0] !== rawModel.rootElement
+  ) {
+    // Single JSON key that matches a known element — treat it as the wrapper.
+    schemaModel = { ...rawModel, rootElement: jsonKeys[0] };
+  }
+
   const walker = new SchemaWalker(schemaModel);
 
   if (strict) {

@@ -527,4 +527,41 @@ describe('parseXsd — circular include + default-NS import with xs:any (TISS pa
     expect(ct.elements).toHaveLength(3);
     expect(ct.attributes).toHaveLength(2);
   });
+
+  // ── WSDL support ────────────────────────────────────────────────────────
+
+  it('parses a WSDL file by extracting the embedded <types>/<schema>', async () => {
+    const model = await parseXsd(resolve(fixturesDir, 'simple.wsdl'));
+
+    // simple.xsd is included inside the WSDL; its types must be available
+    expect(model.elements.has('person')).toBe(true);
+    expect(model.complexTypes.has('PersonType')).toBe(true);
+    expect(model.rootElement).toBe('person');
+  });
+
+  it(
+    'parses an ISO-8859-1 XSD chain from file bytes without corruption',
+    async () => {
+      const schemaDir = resolve(__dirname, '../schema/tiss-comunicacao-040300');
+      const model = await parseXsd(resolve(schemaDir, 'tissWebServicesV4_03_00.xsd'));
+      expect(model.rootElement).toBeTruthy();
+      expect(model.elements.size).toBeGreaterThan(0);
+      expect(model.complexTypes.size).toBeGreaterThan(0);
+    },
+    TIMEOUT,
+  );
+
+  it(
+    'parses a WSDL with ISO-8859-1 encoding and resolves xs:import to find xs:elements',
+    async () => {
+      const schemaDir = resolve(__dirname, '../schema/tiss-comunicacao-040300');
+      const model = await parseXsd(
+        resolve(schemaDir, 'tissSolicitacaoStatusAutorizacaoV4_03_00.wsdl'),
+      );
+      expect(model.elements.size).toBeGreaterThan(0);
+      expect(model.elements.has('solicitacaoStatusAutorizacaoWS')).toBe(true);
+      expect(model.elements.has('situacaoAutorizacaoWS')).toBe(true);
+    },
+    TIMEOUT,
+  );
 });

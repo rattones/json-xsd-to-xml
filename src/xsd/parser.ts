@@ -31,7 +31,11 @@ const XSD_ARRAY_LOCAL_NAMES = [
   'import',
 ];
 
-const ALWAYS_ARRAY = [...XSD_ARRAY_LOCAL_NAMES.map((n) => `xs:${n}`), ...XSD_ARRAY_LOCAL_NAMES];
+const ALWAYS_ARRAY = [
+  ...XSD_ARRAY_LOCAL_NAMES.map((n) => `xs:${n}`),
+  ...XSD_ARRAY_LOCAL_NAMES.map((n) => `xsd:${n}`),
+  ...XSD_ARRAY_LOCAL_NAMES,
+];
 
 // ---------------------------------------------------------------------------
 // Default-namespace normalisation (xs: prefix inferral)
@@ -72,7 +76,13 @@ function normalizeXsPrefix(node: unknown): unknown {
   if (node !== null && typeof node === 'object') {
     const result: RawNode = {};
     for (const [key, value] of Object.entries(node as RawNode)) {
-      const normalizedKey = XSD_BARE_TO_PREFIXED[key] ?? key;
+      // 1. Map bare XSD names (default namespace) → xs:*
+      // 2. Map xsd:* names (alternative common prefix) → xs:*
+      let normalizedKey = XSD_BARE_TO_PREFIXED[key] ?? key;
+      if (normalizedKey === key && key.startsWith('xsd:')) {
+        const bare = key.slice(4); // 'xsd:include' → 'include'
+        normalizedKey = XSD_BARE_TO_PREFIXED[bare] ?? key;
+      }
       result[normalizedKey] = normalizeXsPrefix(value);
     }
     return result;
@@ -307,30 +317,77 @@ async function parseXsdInternal(
 
   let xsdContent: string;
   try {
-    xsdContent = normalizeXmlEncodingDeclaration(await readFile(resolvedPath, 'utf-8'));
+    // Read as Buffer first so we can honour the file's own encoding declaration.
+    // readFile(..., 'utf-8') silently replaces every byte ≥ 0x80 that is not
+    // valid UTF-8 with U+FFFD, which corrupts ISO-8859-1/Latin-1 content and
+    // causes fast-xml-parser to see an apparently empty document at position 1:1.
+    const buf = await readFile(resolvedPath);
+    const peek = buf.slice(0, Math.min(300, buf.length)).toString('ascii');
+    const encMatch = /encoding=["']([^"']+)["']/i.exec(peek);
+    const declaredEnc = (encMatch?.[1] ?? 'utf-8').toLowerCase().replace(/-/g, '');
+    // latin1 maps bytes 0x00–0xFF one-to-one to Unicode code points, so all
+    // accented characters in TISS/ISO-8859-1 files are preserved intact.
+    const raw = declaredEnc === 'utf8' ? buf.toString('utf-8') : buf.toString('latin1');
+    xsdContent = normalizeXmlEncodingDeclaration(raw);
   } catch (err) {
+    if (err instanceof XsdParseError) throw err;
     throw new XsdParseError(`Cannot read XSD file: ${resolvedPath}`, err);
   }
 
-  let parsed: RawNode;
+  let schema: RawNode;
   try {
     const parser = makeParser();
     const rawParsed = parser.parse(xsdContent) as RawNode;
-    // If the XSD uses a default namespace (e.g. xmlns="...XMLSchema") instead
-    // of the xs: prefix, fast-xml-parser produces keys like 'schema',
-    // 'element', 'sequence', etc.  Normalise them to xs:* so the rest of the
-    // parser works uniformly.
-    parsed =
-      rawParsed.schema !== undefined && rawParsed['xs:schema'] === undefined
-        ? (normalizeXsPrefix(rawParsed) as RawNode)
-        : rawParsed;
-  } catch (err) {
-    throw new XsdParseError(`Failed to parse XSD XML content from: ${resolvedPath}`, err);
-  }
 
-  const schema = parsed['xs:schema'] as RawNode | undefined;
-  if (!schema) {
-    throw new XsdParseError(`Invalid XSD: root element <xs:schema> not found in ${resolvedPath}`);
+    // ── WSDL input ──────────────────────────────────────────────────────────
+    // A WSDL file has <definitions> as root. The actual schema lives inside
+    // <definitions>/<types>/<schema> (may use the default XSD namespace or
+    // the xs: prefix).  The xs:import inside that embedded schema points to
+    // the XSD that owns the xs:element declarations, which will be merged
+    // after the include/import processing below.
+    const defsNode = rawParsed.definitions as RawNode | undefined;
+    if (defsNode !== undefined) {
+      const typesNode = defsNode.types as RawNode | undefined;
+      // Find any *:schema or bare 'schema' key inside <types>, regardless of prefix
+      // (xs:schema, xsd:schema, schema, …).
+      const embeddedEntry = Object.entries(typesNode ?? {}).find(
+        ([k]) => k === 'schema' || k.endsWith(':schema'),
+      );
+      const embedded = embeddedEntry?.[1] as RawNode | undefined;
+      if (!embedded) {
+        throw new XsdParseError(
+          `Invalid WSDL: no <types>/<schema> element found in ${resolvedPath}`,
+        );
+      }
+      // Merge namespace declarations from <definitions> into the embedded schema
+      // node so that xmlns:ans (and other prefixes) declared at the WSDL root
+      // are available when building the prefixMap later.
+      const defsNsAttrs = Object.fromEntries(
+        Object.entries(defsNode).filter(
+          ([k, v]) => k.startsWith('@_xmlns:') && typeof v === 'string',
+        ),
+      );
+      const embeddedWithNs: RawNode = { ...defsNsAttrs, ...(embedded as RawNode) };
+      // Normalise default-namespace keys → xs:* so the rest of the parser is uniform.
+      schema = normalizeXsPrefix(embeddedWithNs) as RawNode;
+    } else {
+      // ── Standard XSD ──────────────────────────────────────────────────────
+      // May use default namespace (xmlns="…XMLSchema") instead of xs: prefix.
+      const normalized =
+        rawParsed.schema !== undefined && rawParsed['xs:schema'] === undefined
+          ? (normalizeXsPrefix(rawParsed) as RawNode)
+          : rawParsed;
+      const xsSchema = normalized['xs:schema'] as RawNode | undefined;
+      if (!xsSchema) {
+        throw new XsdParseError(
+          `Invalid XSD: root element <xs:schema> not found in ${resolvedPath}`,
+        );
+      }
+      schema = xsSchema;
+    }
+  } catch (err) {
+    if (err instanceof XsdParseError) throw err;
+    throw new XsdParseError(`Failed to parse XSD/WSDL content from: ${resolvedPath}`, err);
   }
 
   const targetNamespace = schema['@_targetNamespace'] as string | undefined;
@@ -436,7 +493,13 @@ async function parseXsdInternal(
     }
   }
 
-  return { rootElement, elements, complexTypes, simpleTypes, targetNamespace };
+  // When rootElement is empty (e.g. WSDL schema or type-library XSD), derive
+  // it from the first element that was merged via xs:include / xs:import.
+  // This lets the converter identify a sensible default root without requiring
+  // the caller to guess the element name manually.
+  const effectiveRoot = rootElement || elements.keys().next().value || '';
+
+  return { rootElement: effectiveRoot, elements, complexTypes, simpleTypes, targetNamespace };
 }
 
 /**

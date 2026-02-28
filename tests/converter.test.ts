@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -834,4 +835,150 @@ describe('converter — xs:import (person-with-import.xsd)', () => {
     expect(xml).toContain('tipo="celular"');
     expect(xml).toContain('<numero>98888-1234</numero>');
   });
+});
+
+// ---------------------------------------------------------------------------
+// WSDL input — converter accepts .wsdl as schema source
+// ---------------------------------------------------------------------------
+describe('converter — WSDL input (simple.wsdl)', () => {
+  const simpleWsdl = resolve(fixturesDir, 'simple.wsdl');
+
+  it('converts JSON to XML using a WSDL with embedded xs:include', async () => {
+    const xml = await convertJsonToXml({ '@id': '42', name: 'WSDL Test', age: 25 }, simpleWsdl, {
+      xmlDeclaration: false,
+    });
+    expect(xml).toContain('<person');
+    expect(xml).toContain('id="42"');
+    expect(xml).toContain('<name>WSDL Test</name>');
+    expect(xml).toContain('<age>25</age>');
+  });
+
+  it('wraps the object under the root element key when provided', async () => {
+    const xml = await convertJsonToXml(
+      { person: { '@id': '1', name: 'Alice', age: 30 } },
+      simpleWsdl,
+      { xmlDeclaration: false },
+    );
+    expect(xml.startsWith('<person')).toBe(true);
+    expect(xml).toContain('<name>Alice</name>');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WSDL input — real TISS WSDL (ISO-8859-1 file chain)
+// ---------------------------------------------------------------------------
+describe('converter — WSDL input (TISS solicitacaoStatusAutorizacao)', () => {
+  const tissWsdl = resolve(
+    __dirname,
+    '../schema/tiss-comunicacao-040300/tissSolicitacaoStatusAutorizacaoV4_03_00.wsdl',
+  );
+  const TIMEOUT = 10_000;
+
+  it(
+    'converts TISS solicitacaoStatusAutorizacao JSON to XML via WSDL',
+    async () => {
+      const json = {
+        solicitacaoStatusAutorizacaoWS: {
+          cabecalho: {
+            identificacaoTransacao: {
+              tipoTransacao: 'SOLICITA_STATUS_AUTORIZACAO',
+              sequencialTransacao: '1001',
+              dataRegistroTransacao: '2025-09-16',
+              horaRegistroTransacao: '10:54:58',
+            },
+            falhaNegocio: null,
+            origem: {
+              identificacaoPrestador: {
+                CNPJ: null,
+                CPF: null,
+                codigoPrestadorNaOperadora: '51100001',
+              },
+              registroANS: null,
+            },
+            destino: {
+              identificacaoPrestador: null,
+              registroANS: '000582',
+            },
+            Padrao: '4.01.00',
+            loginSenhaPrestador: {
+              loginPrestador: '00058578_WS',
+              senhaPrestador: 'e2e636fd480a18fb888765a8830b1196',
+            },
+          },
+          solicitacaoStatusAutorizacao: null,
+          hash: '3f64256fa67a6b72b85768722c635c4b',
+          Signature: null,
+        },
+      };
+
+      const xml = await convertJsonToXml(json, tissWsdl, {
+        prettyPrint: true,
+        xmlDeclaration: true,
+      });
+
+      const outDir = resolve(__dirname, 'output');
+      await mkdir(outDir, { recursive: true });
+      await writeFile(resolve(outDir, 'solicitacaoStatusAutorizacao-wrapped.xml'), xml, 'utf-8');
+
+      expect(xml).toContain('<solicitacaoStatusAutorizacaoWS');
+      expect(xml).toContain('<tipoTransacao>SOLICITA_STATUS_AUTORIZACAO</tipoTransacao>');
+      expect(xml).toContain('<sequencialTransacao>1001</sequencialTransacao>');
+      expect(xml).toContain('<codigoPrestadorNaOperadora>51100001</codigoPrestadorNaOperadora>');
+      expect(xml).toContain('<registroANS>000582</registroANS>');
+      expect(xml).toContain('<loginPrestador>00058578_WS</loginPrestador>');
+      expect(xml).toContain('<hash>3f64256fa67a6b72b85768722c635c4b</hash>');
+    },
+    TIMEOUT,
+  );
+
+  it(
+    'accepts bare JSON (fields directly, no wrapper key) via WSDL with rootElement option',
+    async () => {
+      const json = {
+        cabecalho: {
+          identificacaoTransacao: {
+            tipoTransacao: 'SOLICITA_STATUS_AUTORIZACAO',
+            sequencialTransacao: '1001',
+            dataRegistroTransacao: '2025-09-16',
+            horaRegistroTransacao: '10:54:58',
+          },
+          falhaNegocio: null,
+          origem: {
+            identificacaoPrestador: {
+              CNPJ: null,
+              CPF: null,
+              codigoPrestadorNaOperadora: '51100001',
+            },
+            registroANS: null,
+          },
+          destino: {
+            identificacaoPrestador: null,
+            registroANS: '000582',
+          },
+          Padrao: '4.01.00',
+          loginSenhaPrestador: {
+            loginPrestador: '00058578_WS',
+            senhaPrestador: 'e2e636fd480a18fb888765a8830b1196',
+          },
+        },
+        solicitacaoStatusAutorizacao: null,
+        hash: '3f64256fa67a6b72b85768722c635c4b',
+        Signature: null,
+      };
+
+      const xml = await convertJsonToXml(json, tissWsdl, {
+        prettyPrint: true,
+        xmlDeclaration: false,
+        rootElement: 'solicitacaoStatusAutorizacaoWS',
+      });
+
+      const outDir = resolve(__dirname, 'output');
+      await mkdir(outDir, { recursive: true });
+      await writeFile(resolve(outDir, 'solicitacaoStatusAutorizacao-bare.xml'), xml, 'utf-8');
+
+      expect(xml).toContain('<solicitacaoStatusAutorizacaoWS');
+      expect(xml).toContain('<tipoTransacao>SOLICITA_STATUS_AUTORIZACAO</tipoTransacao>');
+    },
+    TIMEOUT,
+  );
 });
