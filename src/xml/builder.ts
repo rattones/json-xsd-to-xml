@@ -27,7 +27,8 @@ export function buildXml(json: JsonObject, walker: SchemaWalker, options: BuildO
 
   // The input JSON may be { rootName: { ...fields } } or just { ...fields }
   // Use case-insensitive lookup so keys like { "MensagemTISS": ... } still match
-  const rootValue: JsonValue = lookupCI(json, rootName) !== undefined ? lookupCI(json, rootName)! : json;
+  const rootValueLookup = lookupCI(json, rootName);
+  const rootValue: JsonValue = rootValueLookup !== undefined ? rootValueLookup : json;
 
   const xmlDeclarationOptions = options.xmlDeclaration
     ? { version: '1.0', encoding: options.encoding }

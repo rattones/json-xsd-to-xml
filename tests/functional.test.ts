@@ -19,7 +19,7 @@
  *       parser may produce are ignored
  */
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -123,9 +123,10 @@ function loadInputEntries(): InputEntry[] {
     .filter((f) => f.endsWith('.json'))
     .map((f) => {
       const name = f.replace(/\.json$/, '');
-      const json = JSON.parse(
-        readFileSync(resolve(inputDir, f), 'utf-8'),
-      ) as Record<string, JsonValue>;
+      const json = JSON.parse(readFileSync(resolve(inputDir, f), 'utf-8')) as Record<
+        string,
+        JsonValue
+      >;
       return { filename: f, name, json, schemaPath };
     });
 }
@@ -170,9 +171,7 @@ describe('functional — JSON → XML → JSON roundtrip', () => {
       // stripped by stripXmlRoot).
       const jsonKeys = Object.keys(json);
       const jsonForComparison: JsonValue =
-        jsonKeys.length === 1 &&
-        typeof json[jsonKeys[0]] === 'object' &&
-        json[jsonKeys[0]] !== null
+        jsonKeys.length === 1 && typeof json[jsonKeys[0]] === 'object' && json[jsonKeys[0]] !== null
           ? (json[jsonKeys[0]] as JsonValue)
           : (json as JsonValue);
       const expected = stripNulls(jsonForComparison) as Record<string, JsonValue>;

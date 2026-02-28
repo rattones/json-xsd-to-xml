@@ -1,6 +1,6 @@
 import type { JsonObject, JsonValue } from '../types.js';
-import type { ElementDef } from '../xsd/types.js';
 import { lookupCI, lowerSet } from '../utils.js';
+import type { ElementDef } from '../xsd/types.js';
 import type { SchemaWalker } from '../xsd/walker.js';
 import { XsdValidationError } from './errors.js';
 import type { ValidationIssue } from './errors.js';
