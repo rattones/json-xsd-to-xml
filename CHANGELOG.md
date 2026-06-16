@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Security
+- Upgraded `fast-xml-parser` from `^5.5.6` to `^5.5.7` to address the Snyk vulnerability `SNYK-JS-FASTXMLPARSER-15699647`.
+
 ## [0.2.1] – 2026-04-28
 
 ### Security
@@ -84,7 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full test suite with Vitest and coverage via `@vitest/coverage-v8`.
 - Biome for linting and formatting.
 
-[Unreleased]: https://github.com/rattones/json-xsd-to-xml/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/rattones/json-xsd-to-xml/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/rattones/json-xsd-to-xml/compare/v0.1.7...v0.2.1
 [0.1.7]: https://github.com/rattones/json-xsd-to-xml/compare/v0.1.1...v0.1.7
 [0.1.1]: https://github.com/rattones/json-xsd-to-xml/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rattones/json-xsd-to-xml/releases/tag/v0.1.0
